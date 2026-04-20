@@ -4,10 +4,15 @@ from fastapi.testclient import TestClient
 from app.main import app
 import pytest
 
-client = TestClient(app)
+client = TestClient(app, raise_server_exceptions=False)
 
 def test_analyze_endpoint_contract():
     """Verify integration contract for /analyze endpoint."""
+    # Obtain auth token
+    resp = client.post("/api/token", json={"username": "admin", "password": "password123"})
+    assert resp.status_code == 200, f"Auth failed"
+    token = resp.json()["access_token"]
+
     payload = {
         "people_count": 80,
         "max_capacity": 100,
@@ -16,8 +21,8 @@ def test_analyze_endpoint_contract():
         "emotion_score": 100
     }
     
-    response = client.post("/api/analyze", json=payload)
-    assert response.status_code == 200
+    response = client.post("/api/analyze", json=payload, headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200, f"Failed: {response.text}"
     
     data = response.json()
     assert "analysis" in data

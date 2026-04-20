@@ -191,7 +191,7 @@
     /* Metrics grid */
     .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 16px;
       margin-bottom: 24px;
     }
@@ -492,8 +492,16 @@
             <div class="metric-icon">👥</div>
             <div class="metric-label">Crowd Density Index</div>
             <div class="metric-value" id="cdi-val">--</div>
-            <div class="metric-unit">CDI Score (0–100)</div>
+            <div class="metric-unit">Normalized (0–100)</div>
             <div class="metric-trend trend-up" id="cdi-trend">● Monitoring active</div>
+          </div>
+
+          <div class="metric-card" style="--card-color:#8b5cf6" onclick="showPage('simulation')">
+            <div class="metric-icon">⚖️</div>
+            <div class="metric-label">Overload Factor</div>
+            <div class="metric-value" id="overload-val">--</div>
+            <div class="metric-unit">Ratio to capacity</div>
+            <div class="metric-trend" id="overload-trend">● Real-world scale pending</div>
           </div>
 
           <div class="metric-card" style="--card-color:#f59e0b" onclick="showPage('simulation')">
@@ -664,11 +672,11 @@
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label" for="people_count">People Count</label>
-                  <input type="number" class="form-input" id="people_count" value="80" min="0" max="1000" aria-label="Number of people"/>
+                  <input type="number" class="form-input" id="people_count" value="120" min="0" max="100000" aria-label="Number of people"/>
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="max_capacity">Max Capacity</label>
-                  <input type="number" class="form-input" id="max_capacity" value="100" min="1" max="1000" aria-label="Maximum capacity"/>
+                  <input type="number" class="form-input" id="max_capacity" value="100" min="1" max="100000" aria-label="Maximum capacity"/>
                 </div>
               </div>
               <div class="form-row">
@@ -703,9 +711,14 @@
             <div id="result-content" style="display:none">
               <div class="result-grid">
                 <div class="result-item">
+                  <div class="result-label">Overload Factor</div>
+                  <div class="result-value" id="res-overload" style="color:#8b5cf6">--</div>
+                  <div style="font-size:11px;color:var(--muted)">Ratio (people/capacity)</div>
+                </div>
+                <div class="result-item">
                   <div class="result-label">Crowd Density Index</div>
                   <div class="result-value" id="res-cdi" style="color:#3b82f6">--</div>
-                  <div style="font-size:11px;color:var(--muted)">CDI = (people/capacity) × 100</div>
+                  <div style="font-size:11px;color:var(--muted)">Normalized 0-100</div>
                 </div>
                 <div class="result-item">
                   <div class="result-label">Queue Wait Time</div>
@@ -944,26 +957,38 @@
     addLog('info', `Analysis started – ${JSON.stringify(payload)}`);
 
     try {
+      errEl.style.display = 'none';
+      const token = await ensureToken();
+      if(!token) throw new Error('Not authenticated');
+
       const resp = await fetch(API_BASE + '/api/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify(payload)
       });
 
-      if (!resp.ok) throw new Error('API returned ' + resp.status);
+      if (!resp.ok) {
+        let msg = `API returned ${resp.status}`;
+        try { const j = await resp.json(); if(j.detail) msg += ': ' + j.detail; } catch(e){}
+        throw new Error(msg);
+      }
+      
       const data = await resp.json();
-      addLog('info', `Analysis complete – CDI:${data.analysis?.cdi?.toFixed(1)} Risk:${data.analysis?.safety_risk} Score:${data.experience_score?.toFixed(1)}`);
+      addLog('info', `Analysis complete – Overload:${data.analysis?.overload_factor?.toFixed(2)}x Risk:${data.analysis?.safety_risk} Score:${data.experience_score?.toFixed(1)}`);
       displayResults(data);
     } catch (e) {
       // Fallback: compute locally
       addLog('warn', 'API call failed – using local deterministic engine: ' + e.message);
-      const cdi = (payload.people_count / payload.max_capacity) * 100;
+      errEl.textContent = 'API Error: ' + e.message + ' (using local fallback)';
+      errEl.style.display = 'block';
+      const overload = payload.people_count / payload.max_capacity;
+      const cdi = Math.min((payload.people_count / payload.max_capacity) * 100, 100);
       const wait = payload.queue_length / payload.service_rate;
       const score = Math.max(0, Math.min(100, 0.4*(100-wait) + 0.3*(100-cdi) + 0.3*payload.emotion_score));
-      const risk = cdi<50?'LOW':cdi<75?'MEDIUM':cdi<90?'HIGH':'CRITICAL';
+      const risk = overload<0.8?'LOW':overload<=1.0?'MEDIUM':overload<=1.5?'HIGH':'CRITICAL';
       displayResults({
         telemetry: payload,
-        analysis: { cdi, wait_time: wait, safety_risk: risk, predicted_congestion: Math.round(wait+2) },
+        analysis: { cdi, overload_factor: overload, wait_time: wait, safety_risk: risk, predicted_congestion: Math.round(wait+2) },
         experience_score: score
       });
     }
@@ -978,9 +1003,15 @@
     const score = data.experience_score ?? 0;
     const risk = data.analysis?.safety_risk ?? 'LOW';
 
+    const overload = data.analysis?.overload_factor ?? 0;
+
     // Simulation page
     document.getElementById('result-placeholder').style.display = 'none';
     document.getElementById('result-content').style.display = 'block';
+    
+    document.getElementById('res-overload').textContent = overload.toFixed(2) + 'x';
+    document.getElementById('res-overload').style.color = overload>1.5?'var(--red)':overload>1?'var(--yellow)':'var(--green)';
+
     document.getElementById('res-cdi').textContent = cdi.toFixed(1);
     document.getElementById('res-wait').textContent = wait.toFixed(1) + ' min';
     document.getElementById('res-exp').textContent = score.toFixed(1);
@@ -1003,12 +1034,17 @@
     document.getElementById('recommendation').textContent = recs[risk] || recs.LOW;
 
     // Dashboard metrics
+    document.getElementById('overload-val').textContent = overload.toFixed(2) + 'x';
     document.getElementById('cdi-val').textContent = cdi.toFixed(1);
     document.getElementById('wait-val').textContent = wait.toFixed(1);
     document.getElementById('exp-val').textContent = score.toFixed(1);
     document.getElementById('risk-val').textContent = risk;
 
     const trendWait = wait>10?'trend-down':wait>5?'':' trend-up';
+    
+    document.getElementById('overload-trend').textContent = overload>1.5?'⚠ Critical Overload':overload>1?'⚠ Slight Overload':'✓ Under Capacity';
+    document.getElementById('overload-trend').className = 'metric-trend ' + (overload>1.5?'trend-down':overload>1?'trend-down':'trend-up');
+
     document.getElementById('cdi-trend').textContent = cdi>75?'⚠ Above safe threshold':'✓ Within safe bounds';
     document.getElementById('cdi-trend').className = 'metric-trend ' + (cdi>75?'trend-down':'trend-up');
     document.getElementById('wait-trend').textContent = '⏱ ' + (wait>10?'High wait time':wait>5?'Moderate wait':'Normal wait');
@@ -1088,12 +1124,34 @@
     addLog('warn','3 active alerts require attention');
   }
 
+  async function ensureToken() {
+    let token = localStorage.getItem('omni_token');
+    if(token) return token;
+    try {
+      const resp = await fetch(API_BASE + '/api/token', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username: 'admin', password: 'password123'})
+      });
+      const data = await resp.json();
+      if(data.access_token) {
+        localStorage.setItem('omni_token', data.access_token);
+        addLog('info', 'Authenticated successfully via JWT');
+        return data.access_token;
+      }
+    } catch(e) {
+      addLog('error', 'Auth failed: ' + e.message);
+    }
+    return null;
+  }
+
   // ---------- Init ----------
-  window.addEventListener('DOMContentLoaded', () => {
+  window.addEventListener('DOMContentLoaded', async () => {
     addLog('info','OmniFlow AI Dashboard initialized');
     addLog('info','Connecting to backend API at ' + API_BASE);
     checkEndpoints();
     renderCdiChart();
+    await ensureToken();
     // Auto demo data
     setTimeout(()=>{
       addLog('info','Running initial demo analysis...');

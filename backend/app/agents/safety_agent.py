@@ -1,13 +1,16 @@
 class SafetyAgent:
-    def __init__(self):
-        pass
-
-    def determine_risk_level(self, cdi: float) -> str:
-        """Determine safety risk based on CDI."""
-        if cdi < 50:
+    def determine_risk_level(self, overload_factor: float) -> str:
+        """
+        Determine safety risk based on real-world overload factor.
+        <0.8  → LOW
+        0.8–1.0 → MEDIUM
+        1.0–1.5 → HIGH
+        >1.5  → CRITICAL
+        """
+        if overload_factor < 0.8:
             return "LOW"
-        elif cdi <= 75:
+        elif overload_factor <= 1.0:
             return "MEDIUM"
-        elif cdi <= 90:
+        elif overload_factor <= 1.5:
             return "HIGH"
         return "CRITICAL"

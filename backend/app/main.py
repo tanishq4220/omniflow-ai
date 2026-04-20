@@ -11,12 +11,15 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi import Depends
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.api.routes import router as api_router
 from app.api.websocket import router as ws_router
+from app.utils.security import require_auth
 
 log = logging.getLogger("omniflow.main")
 
@@ -26,8 +29,9 @@ app = FastAPI(
     title="OmniFlow AI API",
     version="1.0.0",
     description="Autonomous Event Intelligence & Experience Optimization System",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
 )
 
 app.state.limiter = limiter
@@ -80,6 +84,14 @@ app.include_router(ws_router)
 _static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "static"))
 if os.path.isdir(_static_dir):
     app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+
+@app.get("/openapi.json", include_in_schema=False)
+async def get_openapi_endpoint(_dict: dict = Depends(require_auth)):
+    return app.openapi()
+
+@app.get("/secure-docs", include_in_schema=False)
+async def secure_swagger_ui(_dict: dict = Depends(require_auth)):
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="OmniFlow AI Secure Docs")
 
 @app.get("/", include_in_schema=False)
 async def serve_dashboard():
