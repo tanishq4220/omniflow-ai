@@ -740,6 +740,7 @@
               <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted)">
                 <strong style="color:var(--accent)">🤖 Decision Engine Recommendation:</strong>
                 <div id="recommendation" style="margin-top:4px"></div>
+                <div id="predictionBox" style="margin-top:10px; padding:10px; border-radius:8px; background:rgba(59, 130, 246, 0.1); border:1px dashed var(--accent); font-size:12px; font-weight:600"></div>
               </div>
               <!-- CDI progress -->
               <div style="margin-top:16px">
@@ -876,10 +877,10 @@
   }
 
   // ---------- Global Safe DOM Helpers ----------
-  function setText(id, value) {
+  function safeSet(id, value) {
     const el = document.getElementById(id);
-    if (el) el.textContent = value;
-    else console.debug("Missing element for setText:", id);
+    if (!el) return;
+    el.textContent = value;
   }
 
   function setHTML(id, value) {
@@ -923,11 +924,11 @@
     try {
       const r = await fetch(API_BASE + '/api/health');
       const ok = r.ok;
-      setText('ep-health', ok ? '✓ Online' : '✗ Error');
+      safeSet('ep-health', ok ? '✓ Online' : '✗ Error');
       setStyle('ep-health', 'color', ok ? 'var(--green)' : 'var(--red)');
-      setText('ep-root', '✓ Online');
+      safeSet('ep-root', '✓ Online');
       setStyle('ep-root', 'color', 'var(--green)');
-      setText('ep-analyze', '✓ Available');
+      safeSet('ep-analyze', '✓ Available');
       setStyle('ep-analyze', 'color', 'var(--green)');
       addLog('info', 'API health check passed – all endpoints operational');
     } catch(e) {
@@ -1008,7 +1009,7 @@
     } catch (e) {
       // Fallback: keep UI alive while reconnecting
       console.warn('API call failed – ' + e.message);
-      setText('sim-error', 'Reconnecting to live system... ' + e.message);
+      safeSet('sim-error', 'Reconnecting to live system... ' + e.message);
       setStyle('sim-error', 'display', 'block');
       
       const ov = payload.people_count / payload.max_capacity;
@@ -1042,19 +1043,19 @@
     if (overload > 1.5) color = "var(--red)";
     else if (overload > 1) color = "var(--yellow)";
 
-    setText("overloadFactor", overload.toFixed(2) + "x");
+    safeSet("overloadFactor", overload.toFixed(2) + "x");
     setStyle("overloadFactor", "color", color);
 
-    setText("cdi", cdi.toFixed(1));
-    setText("waitTime", wait.toFixed(1) + " min");
-    setText("score", score.toFixed(1));
-    setText("safety", risk);
+    safeSet("cdi", cdi.toFixed(1));
+    safeSet("waitTime", wait.toFixed(1) + " min");
+    safeSet("score", score.toFixed(1));
+    safeSet("safety", risk);
 
     const riskClass = {LOW:'risk-low',MEDIUM:'risk-medium',HIGH:'risk-high',CRITICAL:'risk-critical'}[risk]||'risk-low';
     setHTML('risk-badge-res', `<span class="risk-badge ${riskClass}">● ${risk}</span>`);
 
     const pct = Math.min((data.telemetry?.people_count||0)/(data.telemetry?.max_capacity||100)*100,100);
-    setText('cap-pct', pct.toFixed(1) + '%');
+    safeSet('cap-pct', pct.toFixed(1) + '%');
     setStyle('cap-bar', 'width', pct + '%');
     setStyle('cap-bar', 'background', pct>90?'var(--red)':pct>75?'var(--yellow)':'var(--accent)');
 
@@ -1064,29 +1065,29 @@
       MEDIUM:'🟡 MEDIUM: Monitor closely, prepare overflow capacity, and optimize service throughput.',
       LOW:'🟢 LOW: Normal operations. Continue monitoring. All thresholds within safe bounds.'
     };
-    setText('recommendation', recs[risk] || recs.LOW);
+    safeSet('recommendation', recs[risk] || recs.LOW);
 
     // Dashboard metrics
-    setText('overload-val', overload.toFixed(2) + 'x');
-    setText('cdi-val', cdi.toFixed(1));
-    setText('wait-val', wait.toFixed(1));
-    setText('exp-val', score.toFixed(1));
-    setText('risk-val', risk);
+    safeSet('overload-val', overload.toFixed(2) + 'x');
+    safeSet('cdi-val', cdi.toFixed(1));
+    safeSet('wait-val', wait.toFixed(1));
+    safeSet('exp-val', score.toFixed(1));
+    safeSet('risk-val', risk);
 
-    setText('overload-trend', overload>1.5?'⚠ Critical Overload':overload>1?'⚠ Slight Overload':'✓ Under Capacity');
+    safeSet('overload-trend', overload>1.5?'⚠ Critical Overload':overload>1?'⚠ Slight Overload':'✓ Under Capacity');
     setClass('overload-trend', 'metric-trend ' + (overload>1.5?'trend-down':overload>1?'trend-down':'trend-up'));
 
-    setText('cdi-trend', cdi>75?'⚠ Above safe threshold':'✓ Within safe bounds');
+    safeSet('cdi-trend', cdi>75?'⚠ Above safe threshold':'✓ Within safe bounds');
     setClass('cdi-trend', 'metric-trend ' + (cdi>75?'trend-down':'trend-up'));
-    setText('wait-trend', '⏱ ' + (wait>10?'High wait time':wait>5?'Moderate wait':'Normal wait'));
-    setText('exp-trend', score>=70?'✓ Good experience':score>=40?'⚠ Average experience':'✗ Poor experience');
-    setText('risk-trend', '› Risk: ' + risk);
+    safeSet('wait-trend', '⏱ ' + (wait>10?'High wait time':wait>5?'Moderate wait':'Normal wait'));
+    safeSet('exp-trend', score>=70?'✓ Good experience':score>=40?'⚠ Average experience':'✗ Poor experience');
+    safeSet('risk-trend', '› Risk: ' + risk);
 
     // Agents
-    setText('agent-cdi', cdi.toFixed(0));
-    setText('agent-wait', wait.toFixed(1)+'m');
-    setText('agent-risk', risk);
-    setText('agent-emo', (data.telemetry?.emotion_score||0).toFixed(0));
+    safeSet('agent-cdi', cdi.toFixed(0));
+    safeSet('agent-wait', wait.toFixed(1)+'m');
+    safeSet('agent-risk', risk);
+    safeSet('agent-emo', (data.telemetry?.emotion_score||0).toFixed(0));
 
     // Gauge
     updateGauge(score);
@@ -1097,11 +1098,12 @@
     if(cdiHistory.length>8) cdiHistory.shift();
     renderCdiChart();
 
-    setText('last-update', new Date().toLocaleTimeString());
+    safeSet('last-update', new Date().toLocaleTimeString());
     addLog('info', `Dashboard updated successfully`);
 
     renderHeatmap(data.analysis);
     renderAlerts(data.analysis);
+    renderPrediction(data.analysis);
   }
 
   function renderHeatmap(analysis) {
@@ -1131,41 +1133,52 @@
     setText("avg-density", avg.toFixed(2) + 'x');
   }
 
-  function renderAlerts(analysis) {
+  function renderPrediction(analysis) {
+    const box = document.getElementById("predictionBox");
+    if (!box) return;
+    if (!analysis.predicted_alert) {
+      box.innerHTML = "✅ Stable conditions (10 min)";
+      box.style.color = "var(--green)";
+      return;
+    }
+    box.innerHTML = analysis.predicted_alert;
+    box.style.color = analysis.predicted_alert.includes("CRITICAL") ? "var(--red)" : "var(--yellow)";
+  }
+
+  function renderAlerts(data) {
     const container = document.getElementById("alertsContainer");
-    if(!container || !analysis.alerts) return;
+    const badge = document.getElementById("alertCount");
+    if (!container) return;
     container.innerHTML = "";
-
-    analysis.alerts.forEach(alert => {
+    if (!data.alerts || data.alerts.length === 0) {
+      container.innerHTML = `<div style="color:#94a3b8; padding:20px; text-align:center">✅ No active alerts</div>`;
+      if (badge) badge.textContent = "0";
+      return;
+    }
+    data.alerts.forEach(alert => {
       const div = document.createElement("div");
-      div.className = "alert-item";
-      
-      // Critical UI highlights
-      if (alert.includes("CRITICAL")) div.style.background = "rgba(127, 29, 29, 0.4)";
-      else if (alert.includes("HIGH")) div.style.background = "rgba(120, 53, 15, 0.4)";
-      else div.style.background = "var(--surface2)";
-      
-      div.style.borderLeft = `4px solid ${alert.includes("CRITICAL") ? '#ef4444' : alert.includes("HIGH") ? '#f59e0b' : '#3b82f6'}`;
-
-      let icon = alert.includes("CRITICAL") ? "🚨" : alert.includes("HIGH") ? "⚠️" : "⏳";
-      div.innerHTML = `
-        <div class="alert-icon">${icon}</div>
-        <div>
-          <div class="alert-title" style="color: ${alert.includes("CRITICAL")?'#fca5a5':alert.includes("HIGH")?'#fde68a':'#text'}">${alert}</div>
-          <div class="alert-time">Detected by OmniFlow AI · Just now</div>
-        </div>
-      `;
+      let bg = "#1e293b";
+      if (alert.includes("CRITICAL")) bg = "#7f1d1d";
+      else if (alert.includes("HIGH")) bg = "#78350f";
+      else if (alert.includes("QUEUE")) bg = "#1e3a8a";
+      div.style.background = bg;
+      div.style.padding = "10px";
+      div.style.margin = "6px 0";
+      div.style.borderRadius = "8px";
+      div.style.color = "white";
+      div.style.fontSize = "13px";
+      div.style.fontWeight = "500";
+      div.textContent = alert;
       container.appendChild(div);
     });
-
-    setText("alertCount", analysis.alerts.length);
+    if (badge) badge.textContent = data.alerts.length;
   }
 
   // ---------- Refresh ----------
   function refreshMetrics() {
     addLog('info','Manual refresh triggered');
     checkEndpoints();
-    setText('last-update', new Date().toLocaleTimeString());
+    safeSet('last-update', new Date().toLocaleTimeString());
   }
 
   function generateHeatmap() {

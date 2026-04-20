@@ -24,6 +24,7 @@ class AgentResponse(BaseModel):
     predicted_congestion: int
     heatmap: list[float]          # Grid of zone densities
     alerts: list[str]             # Dynamic system alerts
+    predicted_alert: str | None   # 10min forward-looking warning
 
 
 class SystemState(BaseModel):

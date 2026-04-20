@@ -50,6 +50,15 @@ class DecisionEngine:
         if emo < 40:
             alerts.append("😟 Low attendee satisfaction")
 
+        # 🚀 Predictive AI (10 min lookahead)
+        predicted_people = t.people_count * 1.1 
+        predicted_overload = predicted_people / t.max_capacity
+        predicted_alert = None
+        if predicted_overload > 1.5:
+            predicted_alert = "🚨 CRITICAL (10 min): Overload incoming"
+        elif predicted_overload > 1:
+            predicted_alert = "⚠️ HIGH (10 min): Capacity risk rising"
+
         resp = AgentResponse(
             cdi=cdi,
             overload_factor=overload_factor,
@@ -57,6 +66,7 @@ class DecisionEngine:
             safety_risk=risk,
             predicted_congestion=pred,
             heatmap=heatmap,
-            alerts=alerts
+            alerts=alerts,
+            predicted_alert=predicted_alert
         )
         return SystemState(telemetry=t, analysis=resp, experience_score=score)
