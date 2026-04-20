@@ -36,15 +36,27 @@ Every deterministic logic loop (CDI, Wait Times, Scoring Equations) is rigorousl
 This explicit validation guarantees system stability during volatile surges. Extensive edge-cases ensure calculations do not fail on invalid data inputs. Let no edge-case go untested.
 
 Test suite achieves 75%+ coverage across agents, core engines, and API layers ensuring reliability under edge-case scenarios.
+## 🌐 Live Backend API
+
+https://omniflow-backend-342805636089.us-central1.run.app
+
+Backend deployed on Google Cloud Run for scalable serverless execution.
+
+All API outputs follow deterministic formulas ensuring consistent and testable responses.
+System uses asynchronous FastAPI and WebSocket communication for efficient real-time processing.
+
 ## 🔌 API Contract
 
-### POST `/analyze`
+### Health Endpoint
 
-Process real-time telemetry inputs and retrieve systematic outputs.
+GET /api/health
 
-All API outputs follow deterministic formulas ensuring consistent and testable responses across all scenarios.
+### Analyze Endpoint
 
-**Request:**
+POST /api/analyze
+
+Example:
+
 ```json
 {
   "people_count": 80,
@@ -93,22 +105,19 @@ Verifies the system connectivity and operational availability immediately for De
 }
 ```
 
-## 🚀 Deployment
+## 🚀 Deployment Status
+
+✅ Backend successfully deployed on Google Cloud Run with auto-scaling support.
+
+## ☁️ Deployment Instructions
 
 ### Google Cloud Run
 
-1. Build backend instance:
+> **Note:** Deployment MUST be run from the PROJECT ROOT (not the backend folder). Run this command from the root directory of the project to ensure all dependencies and configuration files are included.
+
+1. Deploy scalable API instances:
    ```bash
-   docker build -t omniflow-backend .
-   ```
-2. Tag and push to Google Container Registry (GCR):
-   ```bash
-   docker tag omniflow-backend gcr.io/[PROJECT_ID]/omniflow-backend
-   docker push gcr.io/[PROJECT_ID]/omniflow-backend
-   ```
-3. Deploy scalable API instances:
-   ```bash
-   gcloud run deploy omniflow-backend --image gcr.io/[PROJECT_ID]/omniflow-backend --platform managed --region us-central1 --allow-unauthenticated
+   gcloud run deploy omniflow-backend --source . --region us-central1 --allow-unauthenticated
    ```
 
 ### Vercel (Frontend)

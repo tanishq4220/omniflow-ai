@@ -10,19 +10,34 @@ engine = DecisionEngine()
 # Mock DB for demo
 users_db = {"admin": get_password_hash("password123")}
 
+@router.get("/")
+async def root():
+    """Root endpoint to verify API status and available routes."""
+    return {
+        "message": "OmniFlow AI API is running",
+        "status": "active",
+        "available_endpoints": {
+            "health": "/api/health",
+            "analyze": "/api/analyze"
+        }
+    }
+
 @router.post("/token", response_model=Token)
 async def login(req: LoginRequest):
+    """Authenticate user and generate access token."""
     if req.username not in users_db or not verify_password(req.password, users_db[req.username]):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     access_token = create_access_token(data={"sub": req.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.post("/telemetry", response_model=SystemState)
 @router.post("/analyze", response_model=SystemState)
 async def process_telemetry(data: TelemetryData):
-    """Processes telemetry and returns system state."""
+    """Processes real-time telemetry array inputs and returns the structured system state variables."""
     state = engine.process_telemetry(data)
-    save_state(state.model_dump())
+    try:
+        save_state(state.model_dump())
+    except Exception:
+        pass  # Prevent DB failures from crashing analytics
     return state
 
 @router.get("/health")
