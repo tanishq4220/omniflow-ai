@@ -1,712 +1,286 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="OmniFlow AI – Autonomous Event Intelligence & Experience Optimization System" />
-  <title>OmniFlow AI – Event Intelligence Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniFlow AI | Production Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #060d1f;
-      --surface: rgba(15, 27, 58, 0.85);
-      --surface2: rgba(20, 38, 82, 0.6);
-      --border: rgba(99, 179, 255, 0.15);
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #334155;
       --accent: #3b82f6;
-      --accent2: #8b5cf6;
-      --green: #10b981;
-      --yellow: #f59e0b;
+      --accent-glow: rgba(59,130,246,0.5);
+      --text: #f8fafc;
+      --muted: #94a3b8;
       --red: #ef4444;
-      --cyan: #06b6d4;
-      --text: #e2e8f0;
-      --muted: #64748b;
+      --yellow: #f59e0b;
+      --green: #10b981;
+      --glass: rgba(30, 41, 59, 0.7);
     }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit', sans-serif; }
+    body { background:var(--bg); color:var(--text); overflow-x:hidden; min-height:100vh; }
+
+    header {
+      padding: 20px 40px;
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    /* Animated background grid */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
-      background-size: 44px 44px;
-      pointer-events: none;
-      z-index: 0;
-    }
+    .logo { font-size:24px; font-weight:700; background:linear-gradient(90deg, #60a5fa, #c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; display:flex; align-items:center; gap:10px; }
+    .status-pill { padding:6px 12px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:100px; color:var(--green); font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px; }
+    .status-dot { width:8px; height:8px; background:var(--green); border-radius:50%; box-shadow:0 0 10px var(--green); animation:pulse 2s infinite; }
 
-    /* Orbs */
-    body::after {
-      content: '';
-      position: fixed;
-      width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
-      top: -150px; right: -150px;
-      pointer-events: none; z-index: 0;
-      animation: pulse 6s ease-in-out infinite;
-    }
+    @keyframes pulse { 0% { opacity:1; } 50% { opacity:0.4; } 100% { opacity:1; } }
 
-    @keyframes pulse { 0%,100%{opacity:.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.1)} }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes slideIn { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
-    @keyframes glow { 0%,100%{box-shadow:0 0 20px rgba(59,130,246,0.3)} 50%{box-shadow:0 0 40px rgba(59,130,246,0.6)} }
-    @keyframes countUp { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
-    @keyframes ripple { 0%{transform:scale(0);opacity:1} 100%{transform:scale(4);opacity:0} }
-    @keyframes spin { to{transform:rotate(360deg)} }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .layout { display:grid; grid-template-columns:260px 1fr; min-height:calc(100vh - 84px); }
 
-    .app { display: flex; height: 100vh; position: relative; z-index: 1; }
+    sidebar { background:rgba(15,23,42,0.5); border-right:1px solid rgba(255,255,255,0.05); padding:30px 20px; }
+    .nav-item { padding:14px 18px; border-radius:12px; color:var(--muted); cursor:pointer; transition:0.3s; margin-bottom:8px; display:flex; align-items:center; gap:12px; font-weight:500; }
+    .nav-item:hover { background:rgba(255,255,255,0.05); color:var(--text); }
+    .nav-item.active { background:var(--accent); color:white; box-shadow:0 10px 20px rgba(59,130,246,0.3); }
 
-    /* Sidebar */
-    .sidebar {
-      width: 260px; min-width: 260px;
-      background: var(--surface);
-      backdrop-filter: blur(20px);
-      border-right: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      padding: 0;
-      animation: slideIn 0.5s ease;
-    }
+    main { padding:40px; }
+    .page { display:none; animation:fadeIn 0.4s ease-out; }
+    .page.active { display:block; }
 
-    .sidebar-logo {
-      padding: 24px 20px;
-      border-bottom: 1px solid var(--border);
-    }
-    .logo-badge {
-      display: flex; align-items: center; gap: 10px;
-    }
-    .logo-icon {
-      width: 38px; height: 38px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-      animation: glow 3s ease-in-out infinite;
-    }
-    .logo-text { font-size: 17px; font-weight: 700; }
-    .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
-    .status-bar {
-      margin: 12px 16px;
-      padding: 8px 12px;
-      background: rgba(16,185,129,0.1);
-      border: 1px solid rgba(16,185,129,0.3);
-      border-radius: 8px;
-      display: flex; align-items: center; gap: 8px;
-      font-size: 12px; color: var(--green);
-    }
-    .status-dot {
-      width: 8px; height: 8px;
-      background: var(--green);
-      border-radius: 50%;
-      animation: blink 1.5s ease-in-out infinite;
-    }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px; margin-top:30px; }
+    .glass-card { background:var(--surface); border:1px solid rgba(255,255,255,0.05); border-radius:24px; padding:28px; position:relative; overflow:hidden; transition:0.3s; }
+    .glass-card:hover { border-color:rgba(59,130,246,0.3); transform:translateY(-4px); }
 
-    .nav { padding: 8px 12px; flex: 1; }
-    .nav-section { margin-bottom: 20px; }
-    .nav-section-label {
-      font-size: 10px; font-weight: 600;
-      color: var(--muted); text-transform: uppercase;
-      letter-spacing: 1px; padding: 6px 8px;
-    }
-    .nav-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; border-radius: 8px;
-      cursor: pointer; font-size: 14px; font-weight: 500;
-      transition: all 0.2s; margin-bottom: 2px;
-      border: 1px solid transparent;
-      background: none;
-      color: var(--text);
-      width: 100%; text-align: left;
-    }
-    .nav-item:hover { background: var(--surface2); border-color: var(--border); }
-    .nav-item.active {
-      background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.2));
-      border-color: rgba(59,130,246,0.4);
-      color: #93c5fd;
-    }
-    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
-    .nav-badge {
-      margin-left: auto; background: var(--red);
-      color: white; font-size: 10px; font-weight: 700;
-      padding: 1px 6px; border-radius: 10px;
-    }
+    .card-title { font-size:14px; color:var(--muted); font-weight:600; display:flex; align-items:center; gap:8px; margin-bottom:16px; text-transform:uppercase; letter-spacing:1px; }
+    .card-title-icon { width:32px; height:32px; background:rgba(255,255,255,0.05); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; }
 
-    .sidebar-footer {
-      padding: 16px; border-top: 1px solid var(--border);
-      font-size: 12px; color: var(--muted);
-    }
+    .metric-value { font-size:40px; font-weight:700; margin-bottom:8px; }
+    .metric-trend { font-size:13px; font-weight:600; display:flex; align-items:center; gap:4px; }
+    .trend-up { color:var(--green); }
+    .trend-down { color:var(--red); }
 
-    /* Main */
-    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    /* Simulation Panel */
+    .control-panel { background:var(--surface); border-radius:24px; padding:30px; border:1px solid rgba(255,255,255,0.05); display:grid; grid-template-columns:1fr 1fr; gap:30px; }
+    .input-group { margin-bottom:20px; }
+    .input-group label { display:block; font-size:13px; color:var(--muted); margin-bottom:8px; font-weight:600; }
+    .input-group input { width:100%; padding:14px 18px; background:var(--surface2); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:white; font-size:15px; outline:none; transition:0.3s; }
+    .input-group input:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-glow); }
 
-    .topbar {
-      padding: 16px 28px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(6,13,31,0.8);
-      backdrop-filter: blur(10px);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .topbar-title { font-size: 18px; font-weight: 700; }
-    .topbar-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .topbar-actions { display: flex; gap: 10px; align-items: center; }
-    .btn {
-      padding: 8px 16px; border-radius: 8px; cursor: pointer;
-      font-size: 13px; font-weight: 600; border: none;
-      transition: all 0.2s; font-family: inherit;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: white;
-    }
-    .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
-    .btn-ghost {
-      background: var(--surface2); color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-ghost:hover { border-color: var(--accent); }
+    .btn { padding:14px 28px; border-radius:12px; border:none; cursor:pointer; font-weight:600; transition:0.3s; display:inline-flex; align-items:center; gap:10px; font-size:15px; }
+    .btn-primary { background:var(--accent); color:white; box-shadow:0 8px 16px rgba(59,130,246,0.3); }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 24px rgba(59,130,246,0.5); }
+    .btn-primary:disabled { background:var(--muted); opacity:0.6; cursor:not-allowed; }
 
-    .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+    /* Result grid */
+    .result-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-top:20px; }
+    .result-item { background:rgba(255,255,255,0.03); padding:16px; border-radius:16px; border:1px solid rgba(255,255,255,0.05); }
+    .result-label { font-size:11px; color:var(--muted); margin-bottom:4px; text-transform:uppercase; }
+    .result-value { font-size:20px; font-weight:700; color:var(--text); }
 
-    /* Cards */
-    .glass-card {
-      background: var(--surface);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 20px;
-      animation: fadeIn 0.5s ease;
-    }
+    .risk-badge { padding:4px 10px; border-radius:6px; font-size:11px; font-weight:700; text-transform:uppercase; }
+    .risk-low { background:rgba(16,185,129,0.1); color:var(--green); }
+    .risk-medium { background:rgba(245,158,11,0.1); color:var(--yellow); }
+    .risk-high { background:rgba(239,68,68,0.1); color:var(--red); }
+    .risk-critical { background:var(--red); color:white; }
 
-    /* Metrics grid */
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
+    /* Heatmap Grid */
+    .heatmap-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; width:100%; aspect-ratio:1; }
+    .heatmap-cell { border-radius:8px; transition:0.5s; cursor:pointer; }
+    .heatmap-cell:hover { transform:scale(1.05); }
 
-    .metric-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 20px;
-      animation: fadeIn 0.5s ease;
-      position: relative; overflow: hidden;
-      cursor: pointer; transition: all 0.3s;
-    }
-    .metric-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--card-color, var(--accent));
-    }
-    .metric-card:hover {
-      border-color: var(--card-color, var(--accent));
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-    }
-    .metric-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-    .metric-value { font-size: 36px; font-weight: 800; margin: 8px 0 4px; animation: countUp 0.8s ease; }
-    .metric-unit { font-size: 13px; color: var(--muted); }
-    .metric-icon {
-      position: absolute; top: 16px; right: 16px;
-      font-size: 28px; opacity: 0.2;
-    }
-    .metric-trend { font-size: 12px; margin-top: 6px; }
-    .trend-up { color: var(--green); }
-    .trend-down { color: var(--red); }
+    /* Logs */
+    .log-feed { height:400px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:12px; padding:15px; font-family:monospace; font-size:12px; }
+    .log-entry { margin-bottom:8px; display:flex; gap:10px; border-bottom:1px solid rgba(255,255,255,0.03); padding-bottom:4px; }
+    .log-time { color:var(--muted); }
+    .log-level-info { color:var(--accent); }
+    .log-level-warn { color:var(--yellow); }
+    .log-level-error { color:var(--red); }
 
-    /* Dashboard grid */
-    .dash-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .dash-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    /* Alerts */
+    .alert-item { padding:14px; border-radius:12px; margin-bottom:12px; display:flex; align-items:flex-start; gap:12px; transition:0.3s; animation:slideIn 0.3s ease-out; }
+    .alert-icon { font-size:20px; margin-top:2px; }
+    .alert-title { font-weight:700; font-size:14px; margin-bottom:2px; }
+    .alert-time { font-size:11px; color:rgba(255,255,255,0.6); }
 
-    .card-title {
-      font-size: 14px; font-weight: 700;
-      margin-bottom: 16px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .card-title-icon { font-size: 16px; }
+    @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
 
-    /* Risk badge */
-    .risk-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 12px; border-radius: 20px;
-      font-size: 12px; font-weight: 700; text-transform: uppercase;
-    }
-    .risk-low { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
-    .risk-medium { background: rgba(245,158,11,0.15); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
-    .risk-high { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
-    .risk-critical { background: rgba(239,68,68,0.3); color: #fca5a5; border: 1px solid rgba(239,68,68,0.5); animation: blink 0.8s infinite; }
+    .chart-container { height:120px; display:flex; align-items:flex-end; gap:6px; margin-top:20px; }
+    .chart-bar { flex:1; background:var(--accent); border-radius:4px 4px 0 0; transition:0.5s; position:relative; }
+    .chart-bar:hover::after { content:attr(data-value); position:absolute; top:-25px; left:50%; transform:translateX(-50%); font-size:10px; background:black; padding:2px 6px; border-radius:4px; }
 
-    /* Progress bar */
-    .progress-bar {
-      height: 8px; background: rgba(255,255,255,0.08);
-      border-radius: 4px; overflow: hidden; margin: 8px 0;
-    }
-    .progress-fill {
-      height: 100%; border-radius: 4px;
-      transition: width 0.8s ease;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-    }
+    .gauge-wrapper { width:180px; height:180px; margin:0 auto; position:relative; }
+    .gauge-svg { transform:rotate(-90deg); width:100%; height:100%; }
+    .gauge-bg { fill:none; stroke:var(--surface2); stroke-width:12; }
+    .gauge-arc { fill:none; stroke:var(--accent); stroke-width:12; stroke-linecap:round; stroke-dasharray:251; stroke-dashoffset:251; transition:1s ease-out; }
+    .gauge-content { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; }
+    .gauge-num { font-size:36px; font-weight:700; line-height:1; }
+    .gauge-unit { font-size:11px; color:var(--muted); margin-top:4px; }
 
-    /* Gauge */
-    .gauge-container { text-align: center; padding: 10px 0; }
-    .gauge-svg { width: 160px; height: 90px; }
+    .spinner { width:18px; height:18px; border:3px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 1s infinite linear; }
+    @keyframes spin { to { transform:rotate(360deg); } }
 
-    /* Agents */
-    .agent-list { display: flex; flex-direction: column; gap: 10px; }
-    .agent-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 14px; border-radius: 10px;
-      background: var(--surface2); border: 1px solid var(--border);
-      transition: all 0.2s;
-    }
-    .agent-item:hover { border-color: var(--accent); }
-    .agent-dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .agent-name { font-size: 13px; font-weight: 600; flex: 1; }
-    .agent-status { font-size: 11px; color: var(--muted); }
-    .agent-value { font-size: 14px; font-weight: 700; }
+    #sim-error { display:none; padding:12px; background:rgba(239,68,68,0.1); border:1px solid var(--red); color:var(--red); border-radius:12px; margin-bottom:20px; font-size:13px; }
 
-    /* Log feed */
-    .log-feed {
-      font-size: 12px; font-family: 'Courier New', monospace;
-      max-height: 220px; overflow-y: auto;
-      display: flex; flex-direction: column; gap: 4px;
-    }
-    .log-feed::-webkit-scrollbar { width: 4px; }
-    .log-feed::-webkit-scrollbar-track { background: transparent; }
-    .log-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-    .log-entry {
-      display: flex; gap: 10px; align-items: flex-start;
-      padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
-      animation: fadeIn 0.3s ease;
-    }
-    .log-time { color: var(--muted); flex-shrink: 0; }
-    .log-level-info { color: var(--cyan); }
-    .log-level-warn { color: var(--yellow); }
-    .log-level-error { color: var(--red); }
-    .log-msg { color: #94a3b8; }
-
-    /* Sim form */
-    .sim-form { display: flex; flex-direction: column; gap: 14px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .form-input {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 12px;
-      color: var(--text); font-size: 14px; font-family: inherit;
-      outline: none; transition: border-color 0.2s;
-    }
-    .form-input:focus { border-color: var(--accent); }
-    .form-input[type=range] { padding: 4px 0; border: none; background: none; cursor: pointer; accent-color: var(--accent); }
-
-    /* Result display */
-    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-    .result-item {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px;
-    }
-    .result-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-    .result-value { font-size: 22px; font-weight: 800; margin-top: 4px; }
-
-    /* Page sections */
-    .page { display: none; }
-    .page.active { display: block; animation: fadeIn 0.4s ease; }
-
-    /* Heatmap */
-    .heatmap-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-      margin: 12px 0;
-      max-width: 400px;
-    }
-    .heatmap-cell {
-      aspect-ratio: 1;
-      border-radius: 4px;
-      transition: all 0.3s;
-      cursor: pointer;
-    }
-    .heatmap-cell:hover { transform: scale(1.1); }
-
-    /* Loading spinner */
-    .spinner {
-      width: 20px; height: 20px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      display: inline-block;
-    }
-
-    /* Tabs */
-    .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface2); padding: 4px; border-radius: 10px; }
-    .tab {
-      padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: all 0.2s;
-      border: none; background: none; color: var(--muted); font-family: inherit;
-    }
-    .tab.active { background: var(--accent); color: white; }
-    .tab:hover:not(.active) { color: var(--text); }
-
-    /* Chart bars */
-    .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 100px; }
-    .chart-bar {
-      flex: 1; border-radius: 4px 4px 0 0;
-      background: linear-gradient(180deg, var(--accent), rgba(59,130,246,0.3));
-      transition: height 0.5s ease; cursor: pointer;
-      position: relative;
-    }
-    .chart-bar:hover::after {
-      content: attr(data-value);
-      position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
-      background: var(--accent); color: white;
-      font-size: 11px; padding: 2px 6px; border-radius: 4px;
-      white-space: nowrap;
-    }
-    .chart-label { font-size: 10px; color: var(--muted); text-align: center; margin-top: 4px; }
-    .chart-labels { display: flex; gap: 6px; }
-    .chart-label-item { flex: 1; text-align: center; font-size: 10px; color: var(--muted); }
-
-    /* Alert items */
-    .alert-item {
-      display: flex; gap: 12px; align-items: flex-start;
-      padding: 14px; border-radius: 10px; margin-bottom: 10px;
-      border: 1px solid var(--border); background: var(--surface2);
-      animation: fadeIn 0.3s ease;
-    }
-    .alert-icon { font-size: 20px; flex-shrink: 0; }
-    .alert-title { font-size: 13px; font-weight: 700; }
-    .alert-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .alert-time { font-size: 11px; color: var(--muted); margin-top: 4px; }
-
-    /* Responsive */
-    @media (max-width: 900px) {
-      .metrics-grid { grid-template-columns: 1fr 1fr; }
-      .dash-grid { grid-template-columns: 1fr; }
-      .dash-grid.three { grid-template-columns: 1fr; }
-      .sidebar { width: 200px; min-width: 200px; }
-    }
-
-    /* Scrollbar global */
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    /* Footer styling */
+    footer { margin-top:40px; text-align:center; padding:20px; color:var(--muted); font-size:12px; border-top:1px solid rgba(255,255,255,0.05); }
   </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- Sidebar -->
-  <aside class="sidebar" role="navigation" aria-label="Main navigation">
-    <div class="sidebar-logo">
-      <div class="logo-badge">
-        <div class="logo-icon">⚡</div>
-        <div>
-          <div class="logo-text">OmniFlow AI</div>
-          <div class="logo-sub">Event Intelligence</div>
-        </div>
-      </div>
+<header>
+  <div class="logo">
+    <span>🌌</span> OmniFlow AI
+  </div>
+  <div class="status-pill">
+    <div class="status-dot"></div>
+    System Operational · Live API
+  </div>
+</header>
+
+<div class="layout">
+  <sidebar>
+    <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')">
+      <span>📊</span> Dashboard
     </div>
-
-    <div class="status-bar" aria-live="polite" aria-label="System status">
-      <div class="status-dot"></div>
-      <span>All Systems Operational</span>
+    <div class="nav-item" id="nav-simulation" onclick="showPage('simulation')">
+      <span>⚙️</span> Simulation
     </div>
-
-    <nav class="nav">
-      <div class="nav-section">
-        <div class="nav-section-label">Analytics</div>
-        <button class="nav-item active" onclick="showPage('dashboard')" aria-current="page" id="nav-dashboard">
-          <span class="nav-icon">📊</span> Dashboard
-        </button>
-        <button class="nav-item" onclick="showPage('simulation')" id="nav-simulation">
-          <span class="nav-icon">🎯</span> Simulation
-        </button>
-        <button class="nav-item" onclick="showPage('heatmap')" id="nav-heatmap">
-          <span class="nav-icon">🗺️</span> Heatmap
-        </button>
-      </div>
-      <div class="nav-section">
-        <div class="nav-section-label">Monitoring</div>
-        <button class="nav-item" onclick="showPage('agents')" id="nav-agents">
-          <span class="nav-icon">🤖</span> Agents
-        </button>
-        <button class="nav-item" onclick="showPage('alerts')" id="nav-alerts">
-          <span class="nav-icon">🚨</span> Alerts
-          <span class="nav-badge" id="alertCount">0</span>
-        </button>
-        <button class="nav-item" onclick="showPage('logs')" id="nav-logs">
-          <span class="nav-icon">📋</span> System Logs
-        </button>
-      </div>
-    </nav>
-
-    <div class="sidebar-footer">
-      🔗 <a href="/api/health" target="_blank" style="color:var(--accent);text-decoration:none">API Health</a>
-      &nbsp;·&nbsp;
-      <a href="/docs" target="_blank" style="color:var(--accent);text-decoration:none">API Docs</a>
+    <div class="nav-item" id="nav-heatmap" onclick="showPage('heatmap')">
+      <span>🔥</span> Heatmap
     </div>
-  </aside>
+    <div class="nav-item" id="nav-alerts" onclick="showPage('alerts')">
+      <span>🔔</span> Alerts <span id="alertCount" style="margin-left:auto; background:var(--red); color:white; padding:2px 6px; border-radius:100px; font-size:10px">0</span>
+    </div>
+    <div class="nav-item" id="nav-agents" onclick="showPage('agents')">
+      <span>🤖</span> Agents
+    </div>
+    <div class="nav-item" id="nav-logs" onclick="showPage('logs')">
+      <span>📋</span> Logs
+    </div>
+  </sidebar>
 
-  <!-- Main content -->
-  <div class="main">
-    <header class="topbar">
-      <div>
-        <div class="topbar-title" id="page-title">System Dashboard</div>
-        <div class="topbar-sub" id="page-sub">Live event telemetry · Last updated <span id="last-update">just now</span></div>
+  <div style="overflow-y:auto; flex:1">
+    <main>
+      <div style="margin-bottom:30px">
+        <h1 id="page-title" style="font-size:32px;font-weight:700">System Dashboard</h1>
+        <p id="page-sub" style="color:var(--muted);margin-top:4px">Real-time venue intelligence at scale</p>
       </div>
-      <div class="topbar-actions">
-        <button class="btn btn-ghost" onclick="refreshMetrics()">↻ Refresh</button>
-        <button class="btn btn-primary" onclick="showPage('simulation')">⚡ Run Analysis</button>
-      </div>
-    </header>
 
-    <main class="content" role="main">
-
-      <!-- Dashboard Page -->
+      <!-- PAGE: Dashboard -->
       <div class="page active" id="page-dashboard">
-
-        <!-- Metric Cards -->
-        <div class="metrics-grid">
-          <div class="metric-card" style="--card-color:#3b82f6" onclick="showPage('simulation')">
-            <div class="metric-icon">👥</div>
-            <div class="metric-label">Crowd Density Index</div>
-            <div class="metric-value" id="cdi-val">--</div>
-            <div class="metric-unit">Normalized (0–100)</div>
-            <div class="metric-trend trend-up" id="cdi-trend">● Monitoring active</div>
-          </div>
-
-          <div class="metric-card" style="--card-color:#8b5cf6" onclick="showPage('simulation')">
-            <div class="metric-icon">⚖️</div>
-            <div class="metric-label">Overload Factor</div>
+        <div class="grid">
+          <div class="glass-card">
+            <div class="card-title"><span class="card-title-icon">👥</span> Overload Factor</div>
             <div class="metric-value" id="overload-val">--</div>
-            <div class="metric-unit">Ratio to capacity</div>
-            <div class="metric-trend" id="overload-trend">● Real-world scale pending</div>
+            <div class="metric-trend" id="overload-trend">Loading telemetry...</div>
           </div>
-
-          <div class="metric-card" style="--card-color:#f59e0b" onclick="showPage('simulation')">
-            <div class="metric-icon">⏱️</div>
-            <div class="metric-label">Queue Wait Time</div>
-            <div class="metric-value" id="wait-val">--</div>
-            <div class="metric-unit">minutes estimated</div>
-            <div class="metric-trend" id="wait-trend">● Run analysis to update</div>
+          <div class="glass-card">
+            <div class="card-title"><span class="card-title-icon">📉</span> Crowd Density (CDI)</div>
+            <div class="metric-value" id="cdi-val">--</div>
+            <div class="metric-trend trend-up" id="cdi-trend">Calculating index...</div>
           </div>
-
-          <div class="metric-card" style="--card-color:#10b981" onclick="showPage('simulation')">
-            <div class="metric-icon">😊</div>
-            <div class="metric-label">Experience Score</div>
-            <div class="metric-value" id="exp-val">--</div>
-            <div class="metric-unit">satisfaction rating</div>
-            <div class="metric-trend trend-up" id="exp-trend">● Pending telemetry</div>
-          </div>
-
-          <div class="metric-card" style="--card-color:#ef4444" onclick="showPage('alerts')">
-            <div class="metric-icon">🛡️</div>
-            <div class="metric-label">Safety Risk</div>
-            <div class="metric-value" id="risk-val" style="font-size:24px">--</div>
-            <div class="metric-unit">current threat level</div>
-            <div class="metric-trend" id="risk-trend">● Awaiting analysis</div>
+          <div class="glass-card">
+            <div class="card-title"><span class="card-title-icon">⏳</span> Queue Wait Time</div>
+            <div class="metric-value"><span id="wait-val">--</span><span style="font-size:16px;color:var(--muted);margin-left:4px">min</span></div>
+            <div class="metric-trend" id="wait-trend">Processing queue...</div>
           </div>
         </div>
 
-        <!-- Dashboard Charts -->
-        <div class="dash-grid">
-          <!-- CDI Bar Chart -->
+        <div class="grid" style="margin-top:30px; grid-template-columns: 2fr 1.2fr">
           <div class="glass-card">
-            <div class="card-title"><span class="card-title-icon">📈</span> CDI Trend (Last 8 Readings)</div>
-            <div class="chart-bars" id="cdi-chart"></div>
-            <div class="chart-labels" id="cdi-labels"></div>
+            <div class="card-title"><span class="card-title-icon">📈</span> Density Progression (CDI)</div>
+            <div class="chart-container" id="cdi-chart"></div>
+            <div id="cdi-labels" style="margin-top:10px"></div>
           </div>
 
-          <!-- Experience Gauge -->
-          <div class="glass-card">
-            <div class="card-title"><span class="card-title-icon">⭐</span> Experience Score Gauge</div>
-            <div class="gauge-container">
-              <svg class="gauge-svg" viewBox="0 0 200 110" id="gauge-svg">
-                <defs>
-                  <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style="stop-color:#ef4444"/>
-                    <stop offset="50%" style="stop-color:#f59e0b"/>
-                    <stop offset="100%" style="stop-color:#10b981"/>
-                  </linearGradient>
-                </defs>
-                <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14" stroke-linecap="round"/>
-                <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round"
-                  stroke-dasharray="251" stroke-dashoffset="251" id="gauge-arc" style="transition:stroke-dashoffset 1s ease"/>
-                <text x="100" y="90" text-anchor="middle" font-family="Inter" font-size="28" font-weight="800" fill="white" id="gauge-text">--</text>
-                <text x="100" y="108" text-anchor="middle" font-family="Inter" font-size="11" fill="#64748b">Experience Score</text>
-                <text x="22" y="108" text-anchor="middle" font-family="Inter" font-size="10" fill="#ef4444">0</text>
-                <text x="178" y="108" text-anchor="middle" font-family="Inter" font-size="10" fill="#10b981">100</text>
+          <div class="glass-card" style="display:flex; flex-direction:column; align-items:center; justify-content:center">
+            <div class="card-title" style="width:100%"><span class="card-title-icon">✨</span> Experience Score</div>
+            <div class="gauge-wrapper">
+              <svg class="gauge-svg" viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="40" />
+                <circle class="gauge-arc" id="gauge-arc" cx="50" cy="50" r="40" />
               </svg>
+              <div class="gauge-content">
+                <div class="gauge-num" id="exp-val">--</div>
+                <div class="gauge-unit">POINTS</div>
+              </div>
             </div>
-            <div style="text-align:center;margin-top:8px">
-              <span class="risk-badge risk-low" id="exp-badge">● Run Simulation</span>
-            </div>
+            <div id="exp-badge" class="risk-badge" style="margin-top:15px">--</div>
           </div>
         </div>
 
-        <!-- Agent Status + API Status -->
-        <div class="dash-grid.three" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
-          <div class="glass-card">
-            <div class="card-title"><span class="card-title-icon">🤖</span> Agent Status</div>
-            <div class="agent-list">
-              <div class="agent-item">
-                <div class="agent-dot" style="background:#10b981"></div>
-                <div><div class="agent-name">CrowdAgent</div><div class="agent-status">Monitoring density</div></div>
-                <div class="agent-value" style="color:#10b981" id="agent-cdi">--</div>
+        <div class="grid">
+           <div class="glass-card">
+              <div class="card-title"><span class="card-title-icon">📍</span> API Integration Status</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:13px">
+                 <div style="color:var(--muted)">Health Check:</div> <div id="ep-health" style="font-weight:600">--</div>
+                 <div style="color:var(--muted)">Root API:</div> <div id="ep-root" style="font-weight:600">--</div>
+                 <div style="color:var(--muted)">Analytics Loop:</div> <div id="ep-analyze" style="font-weight:600">--</div>
+                 <div style="color:var(--muted)">Last Update:</div> <div id="last-update" style="font-weight:600">--</div>
               </div>
-              <div class="agent-item">
-                <div class="agent-dot" style="background:#f59e0b"></div>
-                <div><div class="agent-name">QueueAgent</div><div class="agent-status">Analyzing wait times</div></div>
-                <div class="agent-value" style="color:#f59e0b" id="agent-wait">--</div>
+              <button class="btn btn-primary" onclick="refreshMetrics()" style="width:100%; margin-top:20px; font-size:12px; padding:10px">🔄 Force Sync</button>
+           </div>
+           
+           <div class="glass-card">
+              <div class="card-title"><span class="card-title-icon">🛡️</span> Security & Identity</div>
+              <div style="font-size:13px; color:var(--muted)">
+                 <div style="margin-bottom:10px">Mode: <span style="color:var(--green);font-weight:600">Production</span></div>
+                 <div style="margin-bottom:10px">Auth: <span style="font-weight:600;color:white">JWT Bearer Enforcement</span></div>
+                 <div style="margin-bottom:10px">Encryption: <span style="font-weight:600;color:white">TLS 1.3 / AES-256</span></div>
+                 <div style="padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; font-family:monospace; font-size:10px">ID: omniflow-production-v1-0-1</div>
               </div>
-              <div class="agent-item">
-                <div class="agent-dot" style="background:#ef4444"></div>
-                <div><div class="agent-name">SafetyAgent</div><div class="agent-status">Risk evaluation</div></div>
-                <div class="agent-value" style="color:#ef4444" id="agent-risk">--</div>
-              </div>
-              <div class="agent-item">
-                <div class="agent-dot" style="background:#8b5cf6"></div>
-                <div><div class="agent-name">EmotionAgent</div><div class="agent-status">Sentiment analysis</div></div>
-                <div class="agent-value" style="color:#8b5cf6" id="agent-emo">--</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="glass-card">
-            <div class="card-title"><span class="card-title-icon">🔐</span> Security Metrics</div>
-            <div style="display:flex;flex-direction:column;gap:12px">
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-                  <span style="color:var(--muted)">Rate Limiting</span><span style="color:var(--green)">Active</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
-              </div>
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-                  <span style="color:var(--muted)">JWT Authentication</span><span style="color:var(--green)">Enforced</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
-              </div>
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-                  <span style="color:var(--muted)">CORS Policy</span><span style="color:var(--green)">Configured</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
-              </div>
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-                  <span style="color:var(--muted)">Input Validation</span><span style="color:var(--cyan)">Pydantic</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" style="width:90%;background:var(--cyan)"></div></div>
-              </div>
-              <div>
-                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-                  <span style="color:var(--muted)">Cloud Firestore</span><span style="color:var(--green)" id="db-status">Connected</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" style="width:85%;background:var(--green)"></div></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="glass-card">
-            <div class="card-title"><span class="card-title-icon">📡</span> API Endpoints</div>
-            <div style="display:flex;flex-direction:column;gap:8px">
-              <a href="/" target="_blank" style="text-decoration:none">
-                <div class="agent-item">
-                  <span style="color:var(--green);font-size:11px;font-weight:700">GET</span>
-                  <div style="flex:1;font-size:12px">/</div>
-                  <span id="ep-root" style="font-size:11px;color:var(--muted)">checking…</span>
-                </div>
-              </a>
-              <a href="/api/health" target="_blank" style="text-decoration:none">
-                <div class="agent-item">
-                  <span style="color:var(--green);font-size:11px;font-weight:700">GET</span>
-                  <div style="flex:1;font-size:12px">/api/health</div>
-                  <span id="ep-health" style="font-size:11px;color:var(--muted)">checking…</span>
-                </div>
-              </a>
-              <div class="agent-item">
-                <span style="color:var(--cyan);font-size:11px;font-weight:700">POST</span>
-                <div style="flex:1;font-size:12px">/api/analyze</div>
-                <span id="ep-analyze" style="font-size:11px;color:var(--muted)">checking…</span>
-              </div>
-              <a href="/docs" target="_blank" style="text-decoration:none">
-                <div class="agent-item">
-                  <span style="color:var(--accent2);font-size:11px;font-weight:700">DOC</span>
-                  <div style="flex:1;font-size:12px">/docs</div>
-                  <span style="font-size:11px;color:var(--green)">✓ Swagger UI</span>
-                </div>
-              </a>
-            </div>
-          </div>
+           </div>
         </div>
-      </div><!-- end dashboard -->
+      </div>
 
-      <!-- Simulation Page -->
+      <!-- PAGE: Simulation -->
       <div class="page" id="page-simulation">
-        <div class="dash-grid">
-          <div class="glass-card">
-            <div class="card-title"><span class="card-title-icon">🎯</span> Telemetry Simulation</div>
-            <div class="sim-form">
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="people_count">People Count</label>
-                  <input type="number" class="form-input" id="people_count" value="120" min="0" max="100000" aria-label="Number of people"/>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="max_capacity">Max Capacity</label>
-                  <input type="number" class="form-input" id="max_capacity" value="100" min="1" max="100000" aria-label="Maximum capacity"/>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label class="form-label" for="queue_length">Queue Length</label>
-                  <input type="number" class="form-input" id="queue_length" value="20" min="0" max="500" aria-label="Queue length"/>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="service_rate">Service Rate (per min)</label>
-                  <input type="number" class="form-input" id="service_rate" value="5" min="1" max="100" aria-label="Service rate per minute"/>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="emotion_score">Emotion Score: <span id="emo-display">70</span>/100</label>
-                <input type="range" class="form-input" id="emotion_score" value="70" min="0" max="100"
-                  oninput="document.getElementById('emo-display').textContent=this.value" aria-label="Emotion score"/>
-              </div>
-              <button class="btn btn-primary" onclick="runAnalysis()" id="analyze-btn" style="width:100%;padding:12px">
-                ⚡ Analyze Telemetry
-              </button>
-              <div id="sim-error" style="color:var(--red);font-size:13px;display:none"></div>
+        <div id="sim-error"></div>
+        <div class="control-panel">
+          <div>
+            <div class="input-group">
+              <label>People Count</label>
+              <input type="number" id="people_count" value="45000" placeholder="e.g. 50000">
+            </div>
+            <div class="input-group">
+              <label>Max Venue Capacity</label>
+              <input type="number" id="max_capacity" value="30000" placeholder="e.g. 30000">
+            </div>
+            <div class="input-group">
+              <label>Current Queue Length</label>
+              <input type="number" id="queue_length" value="1200" placeholder="e.g. 500">
             </div>
           </div>
+          <div>
+            <div class="input-group">
+              <label>Service Rate (people/min)</label>
+              <input type="number" id="service_rate" value="150" step="10">
+            </div>
+            <div class="input-group">
+              <label>Avg. Emotion Score (0-100)</label>
+              <input type="number" id="emotion_score" value="65" min="0" max="100">
+            </div>
+            <div style="margin-top:42px">
+              <button class="btn btn-primary" id="analyze-btn" onclick="runAnalysis()" style="width:100%">⚡ Analyze Telemetry</button>
+            </div>
+          </div>
+        </div>
 
-          <!-- Results -->
-          <div class="glass-card" id="result-panel">
-            <div class="card-title"><span class="card-title-icon">📊</span> Analysis Results</div>
-            <div id="result-placeholder" style="text-align:center;padding:40px 0;color:var(--muted)">
-              <div style="font-size:48px;margin-bottom:12px">🎯</div>
+        <div class="grid" style="margin-top:30px">
+          <div class="glass-card" style="grid-column: span 2">
+            <div class="card-title">Analysis Results</div>
+            <div id="result-placeholder" style="text-align:center;padding:60px 0;border:2px dashed rgba(255,255,255,0.05);border-radius:20px">
+              <div style="font-size:40px;margin-bottom:15px">🔍</div>
               <div>Configure parameters and run analysis to see results</div>
             </div>
             <div id="result-content" style="display:none">
@@ -733,7 +307,7 @@
                 </div>
                 <div class="result-item">
                   <div class="result-label">Safety Risk</div>
-                  <div class="result-value" id="safety" style="font-size:18px">--</div>
+                  <div class="result-value" id="risk" style="font-size:18px">--</div>
                   <div id="risk-badge-res" style="margin-top:6px"></div>
                 </div>
               </div>
@@ -748,105 +322,117 @@
                   <span style="color:var(--muted)">Venue Capacity Utilization</span>
                   <span id="cap-pct">0%</span>
                 </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" id="cap-bar" style="width:0%"></div>
+                <div class="progress-bar" style="background:var(--surface2);height:10px;border-radius:100px;overflow:hidden">
+                  <div id="cap-bar" style="width:0;height:100%;background:var(--accent);transition:1s"></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div><!-- end simulation -->
+      </div>
 
-      <!-- Heatmap Page -->
+      <!-- PAGE: Heatmap -->
       <div class="page" id="page-heatmap">
-        <div class="glass-card">
-          <div class="card-title"><span class="card-title-icon">🗺️</span> Venue Crowd Density Heatmap</div>
-          <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px">
-            <button class="btn btn-primary" onclick="generateHeatmap()">🔄 Refresh Heatmap</button>
-            <div style="display:flex;align-items:center;gap:8px;font-size:12px">
-              <div style="width:80px;height:10px;border-radius:4px;background:linear-gradient(90deg,#10b981,#f59e0b,#ef4444)"></div>
-              <span style="color:var(--muted)">Low → High Density</span>
+        <div class="grid" style="grid-template-columns: 1fr 1fr">
+          <div class="glass-card">
+            <div class="card-title"><span class="card-title-icon">🗺️</span> Dynamic Heatmap Grid</div>
+            <div style="margin-bottom:20px; font-size:13px; color:var(--muted)">
+              Visual density of various venue zones (Entrance, Main Arena, Food Courts, Exits).
             </div>
-          </div>
-          <div class="heatmap-grid" id="heatmapGrid" aria-label="Crowd density heatmap"></div>
+           <div class="heatmap-grid" id="heatmapGrid" aria-label="Crowd density heatmap"></div>
           
           <!-- Heatmap Legend -->
           <div style="display:flex; justify-content:center; gap:20px; margin-top:20px; font-size:12px; color:var(--muted); padding:10px; background:var(--surface2); border-radius:10px;">
-            <div style="display:flex; align-items:center; gap:6px;"><div style="width:12px; height:12px; border-radius:3px; background:var(--green);"></div> <span>Low (<1.0x)</span></div>
+            <div style="display:flex; align-items:center; gap:6px;"><div style="width:12px; height:12px; border-radius:3px; background:var(--green);"></div> <span>Low (< 1.0x)</span></div>
             <div style="display:flex; align-items:center; gap:6px;"><div style="width:12px; height:12px; border-radius:3px; background:var(--yellow);"></div> <span>Medium (1.0-1.5x)</span></div>
-            <div style="display:flex; align-items:center; gap:6px;"><div style="width:12px; height:12px; border-radius:3px; background:var(--red);"></div> <span>Critical (>1.5x)</span></div>
+            <div style="display:flex; align-items:center; gap:6px;"><div style="width:12px; height:12px; border-radius:3px; background:var(--red);"></div> <span>Critical (> 1.5x)</span></div>
           </div>
           <div style="margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
             <div class="result-item" style="text-align:center">
               <div class="result-label">Hotspot Zones</div>
-              <div class="result-value" id="hotspot-count" style="color:var(--red)">--</div>
+              <div class="result-value" id="hotspot-count">0</div>
             </div>
             <div class="result-item" style="text-align:center">
               <div class="result-label">Clear Zones</div>
-              <div class="result-value" id="clear-count" style="color:var(--green)">--</div>
+              <div class="result-value" id="clear-count">0</div>
             </div>
             <div class="result-item" style="text-align:center">
               <div class="result-label">Avg Density</div>
-              <div class="result-value" id="avg-density" style="color:var(--accent)">--</div>
+              <div class="result-value" id="avg-density">--</div>
             </div>
+          </div>
+          </div>
+          
+          <div class="glass-card">
+             <div class="card-title"><span class="card-title-icon">🧪</span> Simulation Controls</div>
+             <p style="font-size:13px; color:var(--muted); margin-bottom:20px">
+               The heatmap is driven by the backend `DecisionEngine` based on the latest telemetry analysis. Update parameters in the Simulation tab to affect zone density.
+             </p>
+             <button class="btn btn-primary" onclick="showPage('simulation')" style="width:100%">Go to Simulator</button>
+             <div style="margin-top:30px; padding:20px; background:rgba(0,0,0,0.2); border-radius:16px">
+                <div style="font-size:12px; color:var(--muted); margin-bottom:10px">Heatmap Methodology:</div>
+                <ul style="font-size:11px; line-height:1.6; color:var(--muted); padding-left:15px">
+                  <li>Data is normalized against maximum sector capacity.</li>
+                  <li>Colors correlate to the Overload Factor per zone.</li>
+                  <li>Real-time updates every 5 seconds.</li>
+                </ul>
+             </div>
           </div>
         </div>
       </div>
 
-      <!-- Agents Page -->
-      <div class="page" id="page-agents">
-        <div class="glass-card">
-          <div class="card-title"><span class="card-title-icon">🤖</span> Multi-Agent System Monitor</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-            <div class="agent-item" style="flex-direction:column;align-items:flex-start;gap:8px">
-              <div style="display:flex;align-items:center;gap:10px;width:100%">
-                <div class="agent-dot" style="background:#3b82f6;width:14px;height:14px"></div>
-                <strong>CrowdAgent</strong>
-                <span class="risk-badge risk-low" style="margin-left:auto">Active</span>
-              </div>
-              <div style="font-size:12px;color:var(--muted)">Calculates CDI = (people_count / max_capacity) × 100. Monitors spatial density thresholds and triggers alerts when exceeding 75%.</div>
-              <div style="font-size:12px">Formula: <code style="color:var(--accent)">CDI = (count / capacity) * 100</code></div>
-            </div>
-            <div class="agent-item" style="flex-direction:column;align-items:flex-start;gap:8px">
-              <div style="display:flex;align-items:center;gap:10px;width:100%">
-                <div class="agent-dot" style="background:#f59e0b;width:14px;height:14px"></div>
-                <strong>QueueAgent</strong>
-                <span class="risk-badge risk-low" style="margin-left:auto">Active</span>
-              </div>
-              <div style="font-size:12px;color:var(--muted)">Estimates wait times by modeling queue dynamics. Triggers staff reallocation when wait exceeds threshold.</div>
-              <div style="font-size:12px">Formula: <code style="color:var(--accent)">wait = queue_length / service_rate</code></div>
-            </div>
-            <div class="agent-item" style="flex-direction:column;align-items:flex-start;gap:8px">
-              <div style="display:flex;align-items:center;gap:10px;width:100%">
-                <div class="agent-dot" style="background:#ef4444;width:14px;height:14px"></div>
-                <strong>SafetyAgent</strong>
-                <span class="risk-badge risk-low" style="margin-left:auto">Active</span>
-              </div>
-              <div style="font-size:12px;color:var(--muted)">Evaluates risk thresholds. CDI &lt;50 → LOW, 50–75 → MEDIUM, 75–90 → HIGH, &gt;90 → CRITICAL.</div>
-              <div style="font-size:12px">Output: <code style="color:var(--red)">LOW / MEDIUM / HIGH / CRITICAL</code></div>
-            </div>
-            <div class="agent-item" style="flex-direction:column;align-items:flex-start;gap:8px">
-              <div style="display:flex;align-items:center;gap:10px;width:100%">
-                <div class="agent-dot" style="background:#8b5cf6;width:14px;height:14px"></div>
-                <strong>EmotionAgent</strong>
-                <span class="risk-badge risk-low" style="margin-left:auto">Active</span>
-              </div>
-              <div style="font-size:12px;color:var(--muted)">Analyzes attendee sentiment scores (0–100) to compute experience optimization recommendations.</div>
-              <div style="font-size:12px">Formula: <code style="color:var(--accent2)">score = 0.4(100-wait) + 0.3(100-CDI) + 0.3(emo)</code></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Alerts Page -->
+      <!-- PAGE: Alerts -->
       <div class="page" id="page-alerts">
-        <div class="glass-card">
-          <div class="card-title"><span class="card-title-icon">🚨</span> Live Alerts & Notifications</div>
-          <div id="alertsContainer"></div>
+        <div class="glass-card" style="max-width:800px; margin:0 auto">
+          <div class="card-title">
+            <span class="card-title-icon">🔔</span> Active System Alerts
+            <span id="alertCountLabel" style="margin-left:auto; font-size:12px; color:var(--muted)">0 active alerts</span>
+          </div>
+          <div id="alertsContainer">
+             <div style="color:var(--muted); padding:40px; text-align:center">✅ System Normal. No active alerts.</div>
+          </div>
         </div>
       </div>
 
-      <!-- Logs Page -->
+      <!-- PAGE: Agents -->
+      <div class="page" id="page-agents">
+        <div class="grid">
+          <div class="glass-card">
+            <div class="card-title"><span class="card-title-icon">👥</span> Crowd Agent</div>
+            <div style="font-size:13px;color:var(--muted)">Task: Monitor sector occupancy & density indices</div>
+            <div style="margin-top:15px;padding:12px;background:rgba(0,0,0,0.1);border-radius:12px">
+              <div style="display:flex;justify-content:space-between;font-size:11px"><span>Load Multiplier</span> <span id="agent-cdi">--</span></div>
+            </div>
+            <div class="status-pill" style="margin-top:15px;width:fit-content">ACTIVE / MONITORING</div>
+          </div>
+          <div class="glass-card">
+            <div class="card-title"><span class="card-title-icon">⏳</span> Queue Agent</div>
+            <div style="font-size:13px;color:var(--muted)">Task: Optimize service rates and gate flow</div>
+            <div style="margin-top:15px;padding:12px;background:rgba(0,0,0,0.1);border-radius:12px">
+              <div style="display:flex;justify-content:space-between;font-size:11px"><span>Wait Estimate</span> <span id="agent-wait">--</span></div>
+            </div>
+            <div class="status-pill" style="margin-top:15px;width:fit-content">ACTIVE / OPTIMIZING</div>
+          </div>
+          <div class="glass-card">
+            <div class="card-title"><span class="card-title-icon">🛡️</span> Safety Agent</div>
+            <div style="font-size:13px;color:var(--muted)">Task: Risk assessment & protocol activation</div>
+            <div style="margin-top:15px;padding:12px;background:rgba(0,0,0,0.1);border-radius:12px">
+              <div style="display:flex;justify-content:space-between;font-size:11px"><span>Threat Level</span> <span id="agent-risk">--</span></div>
+            </div>
+            <div class="status-pill" style="margin-top:15px;width:fit-content">ACTIVE / EVALUATING</div>
+          </div>
+          <div class="glass-card">
+            <div class="card-title"><span class="card-title-icon">😟</span> Experience Agent</div>
+            <div style="font-size:13px;color:var(--muted)">Task: Sentiment analysis & satisfaction tracking</div>
+             <div style="margin-top:15px;padding:12px;background:rgba(0,0,0,0.1);border-radius:12px">
+              <div style="display:flex;justify-content:space-between;font-size:11px"><span>Avg Sentiment</span> <span id="agent-emo">--</span></div>
+            </div>
+            <div class="status-pill" style="margin-top:15px;width:fit-content">ACTIVE / FEEDBACK</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: Logs -->
       <div class="page" id="page-logs">
         <div class="glass-card">
           <div class="card-title">
@@ -876,17 +462,17 @@
     document.getElementById('page-sub').textContent = subs[name] || '';
   }
 
-  // ---------- Global Safe DOM Helpers ----------
+  // ---------- Global Safe DOM Helpers (STEP 1) ----------
   function safeSet(id, value) {
     const el = document.getElementById(id);
     if (!el) return;
     el.textContent = value;
   }
 
-  function setHTML(id, value) {
+  function safeHTML(id, value) {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = value;
-    else console.debug("Missing element for setHTML:", id);
+    if (!el) return;
+    el.innerHTML = value;
   }
 
   function setClass(id, className) {
@@ -910,6 +496,7 @@
   }
   function renderLogs() {
     const feed = document.getElementById('log-feed');
+    if(!feed) return;
     feed.innerHTML = logs.map(l => `
       <div class="log-entry">
         <span class="log-time">${l.time}</span>
@@ -930,20 +517,19 @@
       setStyle('ep-root', 'color', 'var(--green)');
       safeSet('ep-analyze', '✓ Available');
       setStyle('ep-analyze', 'color', 'var(--green)');
-      addLog('info', 'API health check passed – all endpoints operational');
     } catch(e) {
-      addLog('warn', 'Health check failed: ' + e.message);
+      console.warn('Health check failed', e);
     }
   }
 
-  // ---------- CDI Chart ----------
+  // ---------- Visual Components ----------
   const cdiHistory = [];
   function renderCdiChart() {
     const c = document.getElementById('cdi-chart');
     const l = document.getElementById('cdi-labels');
+    if (!c) return;
     if (!cdiHistory.length) {
       c.innerHTML = '<div style="color:var(--muted);font-size:12px;width:100%;text-align:center;padding:20px 0">Run analysis to see trend data</div>';
-      l.innerHTML = '';
       return;
     }
     const max = Math.max(...cdiHistory.map(h=>h.v), 1);
@@ -952,29 +538,153 @@
       const color = h.v>90?'var(--red)':h.v>75?'var(--yellow)':'var(--accent)';
       return `<div class="chart-bar" style="height:${pct}%;background:linear-gradient(180deg,${color},${color}44)" data-value="${h.v.toFixed(1)}"></div>`;
     }).join('');
-    l.innerHTML = `<div style="display:flex;gap:6px;width:100%">${cdiHistory.map(h=>`<div class="chart-label-item">${h.t}</div>`).join('')}</div>`;
+    if(l) l.innerHTML = `<div style="display:flex;gap:6px;width:100%">${cdiHistory.map(h=>`<div class="chart-label-item" style="flex:1;font-size:10px;color:var(--muted);text-align:center">${h.t}</div>`).join('')}</div>`;
   }
 
-  // ---------- Gauge ----------
   function updateGauge(val) {
     const arc = document.getElementById('gauge-arc');
-    const txt = document.getElementById('gauge-text');
-    const badge = document.getElementById('exp-badge');
+    if(!arc) return;
     const pct = Math.min(val,100)/100;
     arc.style.strokeDashoffset = 251 - (251 * pct);
-    txt.textContent = val.toFixed(0);
-    const cls = val>=70?'risk-low':val>=40?'risk-medium':'risk-high';
-    badge.className = 'risk-badge ' + cls;
-    badge.textContent = val>=70?'● Excellent':val>=40?'● Moderate':'● Poor';
+    const badge = document.getElementById('exp-badge');
+    if(badge) {
+       const cls = val>=70?'risk-low':val>=40?'risk-medium':'risk-high';
+       badge.className = 'risk-badge ' + cls;
+       badge.textContent = val>=70?'● Excellent':val>=40?'● Moderate':'● Poor';
+    }
   }
 
-  // ---------- Run Analysis ----------
+  // ---------- STEP 2: SINGLE SOURCE OF TRUTH ----------
+  function updateUI(data) {
+    if (!data) return;
+
+    // Simulation Grid
+    safeSet("cdi", data.cdi.toFixed(1));
+    safeSet("waitTime", data.wait_time.toFixed(1) + " min");
+    safeSet("score", data.score.toFixed(1));
+    safeSet("risk", data.risk_level);
+    safeSet("overloadFactor", data.overload_factor.toFixed(2) + "x");
+
+    // Dashboard Metrics
+    safeSet("overload-val", data.overload_factor.toFixed(2) + "x");
+    safeSet("cdi-val", data.cdi.toFixed(1));
+    safeSet("wait-val", data.wait_time.toFixed(1));
+    safeSet("exp-val", data.score.toFixed(0));
+
+    // Experience Indicators
+    updateGauge(data.score);
+    
+    // Safety badge for simulation result
+    const riskClass = {LOW:'risk-low',MEDIUM:'risk-medium',HIGH:'risk-high',CRITICAL:'risk-critical'}[data.risk_level]||'risk-low';
+    safeHTML('risk-badge-res', `<span class="risk-badge ${riskClass}">● ${data.risk_level}</span>`);
+
+    // Trends & Agents
+    safeSet("overload-trend", data.overload_factor > 1.5 ? "⚠ Critical Overload" : (data.overload_factor > 1 ? "⚠ Capacity Exceeded" : "✓ Normal Capacity"));
+    safeSet("agent-cdi", data.cdi.toFixed(0));
+    safeSet("agent-wait", data.wait_time.toFixed(1) + "m");
+    safeSet("agent-risk", data.risk_level);
+    safeSet("agent-emo", data.emotion_score.toFixed(0));
+
+    // Capacity progress bar
+    const capPct = Math.min(data.overload_factor * 100, 150);
+    safeSet('cap-pct', capPct.toFixed(1) + '%');
+    setStyle('cap-bar', 'width', Math.min(capPct, 100) + '%');
+    
+    // Components
+    renderAlerts(data);
+    renderHeatmap(data);
+    renderPrediction(data);
+    
+    // Trends History
+    const t = new Date().toTimeString().slice(0,5);
+    cdiHistory.push({v:data.cdi, t});
+    if(cdiHistory.length > 8) cdiHistory.shift();
+    renderCdiChart();
+    
+    safeSet('last-update', new Date().toLocaleTimeString());
+    setStyle('result-placeholder', 'display', 'none');
+    setStyle('result-content', 'display', 'block');
+  }
+
+  // ---------- STEP 3: STABILIZE ALERTS ----------
+  function renderAlerts(data) {
+    const container = document.getElementById("alertsContainer");
+    const badge = document.getElementById("alertCount");
+    if (!container) return;
+    container.innerHTML = "";
+    
+    const alerts = data.alerts || [];
+    if (alerts.length === 0) {
+      container.innerHTML = `<div style="color:var(--muted); padding:40px; text-align:center">✅ System Normal. No active alerts.</div>`;
+      if (badge) badge.textContent = "0";
+      return;
+    }
+
+    alerts.forEach(a => {
+      const div = document.createElement("div");
+      let bg = "#1e293b";
+      if (a.includes("CRITICAL")) bg = "#7f1d1d";
+      else if (a.includes("HIGH")) bg = "#78350f";
+      
+      div.style.background = bg;
+      div.style.padding = "10px";
+      div.style.borderRadius = "8px";
+      div.style.margin = "6px 0";
+      div.style.color = "white";
+      div.style.fontSize = "13px";
+      div.textContent = a;
+      container.appendChild(div);
+    });
+
+    if (badge) badge.textContent = alerts.length;
+    safeSet("alertCountLabel", alerts.length + " active alerts");
+  }
+
+  // ---------- STEP 4: STABILIZE HEATMAP ----------
+  function renderHeatmap(data) {
+    const grid = document.getElementById("heatmapGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    const heatmap = data.heatmap || [];
+    heatmap.forEach(v => {
+      const cell = document.createElement("div");
+      let color = "#10b981";
+      if (v > 1.5) color = "#ef4444";
+      else if (v > 1) color = "#f59e0b";
+
+      cell.style.background = color;
+      cell.className = "heatmap-cell";
+      grid.appendChild(cell);
+    });
+    
+    if (heatmap.length) {
+       const hot = heatmap.filter(v => v > 1.5).length;
+       const clear = heatmap.filter(v => v < 1).length;
+       const avg = heatmap.reduce((a,b)=>a+b,0) / heatmap.length;
+       safeSet("hotspot-count", hot);
+       safeSet("clear-count", clear);
+       safeSet("avg-density", avg.toFixed(2) + "x");
+    }
+  }
+
+  function renderPrediction(data) {
+     const box = document.getElementById("predictionBox");
+     if (!box) return;
+     if (!data.predicted_alert) {
+        box.innerHTML = "✅ Stable conditions (10 min)";
+        box.style.color = "var(--green)";
+        return;
+     }
+     box.innerHTML = data.predicted_alert;
+     box.style.color = data.predicted_alert.includes("CRITICAL") ? "var(--red)" : "var(--yellow)";
+  }
+
+  // ---------- STEP 5: FIX API FLOW ----------
   async function runAnalysis() {
     const btn = document.getElementById('analyze-btn');
     const errEl = document.getElementById('sim-error');
-    errEl.style.display = 'none';
-    btn.innerHTML = '<span class="spinner"></span> Analyzing...';
-    btn.disabled = true;
+    if(btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>'; }
 
     const payload = {
       people_count: parseInt(document.getElementById('people_count').value)||0,
@@ -984,209 +694,41 @@
       emotion_score: parseFloat(document.getElementById('emotion_score').value)||50
     };
 
-    addLog('info', `Analysis started – ${JSON.stringify(payload)}`);
-
     try {
-      errEl.style.display = 'none';
       const token = await ensureToken();
-      if(!token) throw new Error('Not authenticated');
-
-      const resp = await fetch(API_BASE + '/api/analyze', {
+      const res = await fetch(API_BASE + "/api/analyze", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify(payload)
       });
-
-      if (!resp.ok) {
-        let msg = `API returned ${resp.status}`;
-        try { const j = await resp.json(); if(j.detail) msg += ': ' + j.detail; } catch(e){}
-        throw new Error(msg);
-      }
       
-      const data = await resp.json();
-      addLog('info', `Analysis complete – Overload:${data.analysis?.overload_factor?.toFixed(2)}x Risk:${data.analysis?.safety_risk} Score:${data.experience_score?.toFixed(1)}`);
-      displayResults(data);
-    } catch (e) {
-      // Fallback: keep UI alive while reconnecting
-      console.warn('API call failed – ' + e.message);
-      safeSet('sim-error', 'Reconnecting to live system... ' + e.message);
-      setStyle('sim-error', 'display', 'block');
+      if(!res.ok) throw new Error("API " + res.status);
+      const j = await res.json();
       
-      const ov = payload.people_count / payload.max_capacity;
-      const cdi = Math.min(ov * 100, 100);
-      const wt = payload.queue_length / payload.service_rate;
-      const score = Math.max(0, Math.min(100, 0.4*(100-wt) + 0.3*(100-cdi) + 0.3*payload.emotion_score));
-      displayResults({
-        telemetry: payload,
-        analysis: { cdi, overload_factor: ov, wait_time: wt, safety_risk: ov>1.5?'CRITICAL':ov>1?'HIGH':'LOW', heatmap: [], alerts: [e.message] },
-        experience_score: score
-      });
+      // Bridge mapping to STEP 2 structure
+      const flat = {
+         cdi: j.analysis.cdi,
+         wait_time: j.analysis.wait_time,
+         score: j.experience_score,
+         risk_level: j.analysis.safety_risk,
+         overload_factor: j.analysis.overload_factor,
+         alerts: j.analysis.alerts,
+         heatmap: j.analysis.heatmap,
+         predicted_alert: j.analysis.predicted_alert,
+         emotion_score: payload.emotion_score
+      };
+      
+      updateUI(flat);
+      if(errEl) errEl.style.display = 'none';
+      addLog('info', `Intelligence update complete [${flat.risk_level}]`);
+    } catch (err) {
+      console.error("API Flow Error", err);
+      safeHTML("sim-error", "⚠️ Reconnecting to live intelligence system...");
+      setStyle("sim-error", "display", "block");
+      addLog('error', `API sync lost: ${err.message}`);
     }
 
-    btn.innerHTML = '⚡ Analyze Telemetry';
-    btn.disabled = false;
-  }
-
-  function displayResults(data) {
-    const cdi = data.analysis?.cdi ?? 0;
-    const wait = data.analysis?.wait_time ?? 0;
-    const score = data.experience_score ?? 0;
-    const risk = data.analysis?.safety_risk ?? 'LOW';
-
-    const overload = data.analysis?.overload_factor ?? 0;
-
-    // Simulation page
-    setStyle('result-placeholder', 'display', 'none');
-    setStyle('result-content', 'display', 'block');
-    
-    let color = "var(--green)";
-    if (overload > 1.5) color = "var(--red)";
-    else if (overload > 1) color = "var(--yellow)";
-
-    safeSet("overloadFactor", overload.toFixed(2) + "x");
-    setStyle("overloadFactor", "color", color);
-
-    safeSet("cdi", cdi.toFixed(1));
-    safeSet("waitTime", wait.toFixed(1) + " min");
-    safeSet("score", score.toFixed(1));
-    safeSet("safety", risk);
-
-    const riskClass = {LOW:'risk-low',MEDIUM:'risk-medium',HIGH:'risk-high',CRITICAL:'risk-critical'}[risk]||'risk-low';
-    setHTML('risk-badge-res', `<span class="risk-badge ${riskClass}">● ${risk}</span>`);
-
-    const pct = Math.min((data.telemetry?.people_count||0)/(data.telemetry?.max_capacity||100)*100,100);
-    safeSet('cap-pct', pct.toFixed(1) + '%');
-    setStyle('cap-bar', 'width', pct + '%');
-    setStyle('cap-bar', 'background', pct>90?'var(--red)':pct>75?'var(--yellow)':'var(--accent)');
-
-    const recs = {
-      CRITICAL:'⚠️ CRITICAL: Immediately reroute crowds, activate emergency protocols, and halt entry.',
-      HIGH:'🔴 HIGH: Deploy additional staff, open overflow areas, and begin active crowd redistribution.',
-      MEDIUM:'🟡 MEDIUM: Monitor closely, prepare overflow capacity, and optimize service throughput.',
-      LOW:'🟢 LOW: Normal operations. Continue monitoring. All thresholds within safe bounds.'
-    };
-    safeSet('recommendation', recs[risk] || recs.LOW);
-
-    // Dashboard metrics
-    safeSet('overload-val', overload.toFixed(2) + 'x');
-    safeSet('cdi-val', cdi.toFixed(1));
-    safeSet('wait-val', wait.toFixed(1));
-    safeSet('exp-val', score.toFixed(1));
-    safeSet('risk-val', risk);
-
-    safeSet('overload-trend', overload>1.5?'⚠ Critical Overload':overload>1?'⚠ Slight Overload':'✓ Under Capacity');
-    setClass('overload-trend', 'metric-trend ' + (overload>1.5?'trend-down':overload>1?'trend-down':'trend-up'));
-
-    safeSet('cdi-trend', cdi>75?'⚠ Above safe threshold':'✓ Within safe bounds');
-    setClass('cdi-trend', 'metric-trend ' + (cdi>75?'trend-down':'trend-up'));
-    safeSet('wait-trend', '⏱ ' + (wait>10?'High wait time':wait>5?'Moderate wait':'Normal wait'));
-    safeSet('exp-trend', score>=70?'✓ Good experience':score>=40?'⚠ Average experience':'✗ Poor experience');
-    safeSet('risk-trend', '› Risk: ' + risk);
-
-    // Agents
-    safeSet('agent-cdi', cdi.toFixed(0));
-    safeSet('agent-wait', wait.toFixed(1)+'m');
-    safeSet('agent-risk', risk);
-    safeSet('agent-emo', (data.telemetry?.emotion_score||0).toFixed(0));
-
-    // Gauge
-    updateGauge(score);
-
-    // History
-    const t = new Date().toTimeString().slice(0,5);
-    cdiHistory.push({v:cdi,t});
-    if(cdiHistory.length>8) cdiHistory.shift();
-    renderCdiChart();
-
-    safeSet('last-update', new Date().toLocaleTimeString());
-    addLog('info', `Dashboard updated successfully`);
-
-    renderHeatmap(data.analysis);
-    renderAlerts(data.analysis);
-    renderPrediction(data.analysis);
-  }
-
-  function renderHeatmap(analysis) {
-    const container = document.getElementById("heatmapGrid");
-    if(!container || !analysis.heatmap) return;
-    container.innerHTML = "";
-
-    analysis.heatmap.forEach(value => {
-      const cell = document.createElement("div");
-      let color = "var(--green)";
-      if (value > 1.5) color = "var(--red)";
-      else if (value > 1) color = "var(--yellow)";
-      
-      cell.style.background = color;
-      cell.className = "heatmap-cell";
-      cell.title = `Zone Density: ${value.toFixed(2)}`;
-      container.appendChild(cell);
-    });
-
-    // Update stats
-    const hot = analysis.heatmap.filter(v => v > 1.5).length;
-    const clear = analysis.heatmap.filter(v => v < 1).length;
-    const avg = analysis.heatmap.reduce((a,b)=>a+b,0) / analysis.heatmap.length;
-    
-    setText("hotspot-count", hot);
-    setText("clear-count", clear);
-    setText("avg-density", avg.toFixed(2) + 'x');
-  }
-
-  function renderPrediction(analysis) {
-    const box = document.getElementById("predictionBox");
-    if (!box) return;
-    if (!analysis.predicted_alert) {
-      box.innerHTML = "✅ Stable conditions (10 min)";
-      box.style.color = "var(--green)";
-      return;
-    }
-    box.innerHTML = analysis.predicted_alert;
-    box.style.color = analysis.predicted_alert.includes("CRITICAL") ? "var(--red)" : "var(--yellow)";
-  }
-
-  function renderAlerts(data) {
-    const container = document.getElementById("alertsContainer");
-    const badge = document.getElementById("alertCount");
-    if (!container) return;
-    container.innerHTML = "";
-    if (!data.alerts || data.alerts.length === 0) {
-      container.innerHTML = `<div style="color:#94a3b8; padding:20px; text-align:center">✅ No active alerts</div>`;
-      if (badge) badge.textContent = "0";
-      return;
-    }
-    data.alerts.forEach(alert => {
-      const div = document.createElement("div");
-      let bg = "#1e293b";
-      if (alert.includes("CRITICAL")) bg = "#7f1d1d";
-      else if (alert.includes("HIGH")) bg = "#78350f";
-      else if (alert.includes("QUEUE")) bg = "#1e3a8a";
-      div.style.background = bg;
-      div.style.padding = "10px";
-      div.style.margin = "6px 0";
-      div.style.borderRadius = "8px";
-      div.style.color = "white";
-      div.style.fontSize = "13px";
-      div.style.fontWeight = "500";
-      div.textContent = alert;
-      container.appendChild(div);
-    });
-    if (badge) badge.textContent = data.alerts.length;
-  }
-
-  // ---------- Refresh ----------
-  function refreshMetrics() {
-    addLog('info','Manual refresh triggered');
-    checkEndpoints();
-    safeSet('last-update', new Date().toLocaleTimeString());
-  }
-
-  function generateHeatmap() {
-    addLog('info',`Heatmap refreshed from latest telemetry`);
-  }
-
-  function loadAlerts() {
-    addLog('info','Alerts refreshed from latest telemetry');
+    if(btn) { btn.disabled = false; btn.innerHTML = '⚡ Analyze Telemetry'; }
   }
 
   async function ensureToken() {
@@ -1201,37 +743,21 @@
       const data = await resp.json();
       if(data.access_token) {
         localStorage.setItem('omni_token', data.access_token);
-        addLog('info', 'Authenticated successfully via JWT');
         return data.access_token;
       }
-    } catch(e) {
-      addLog('error', 'Auth failed: ' + e.message);
-    }
-    return null;
+    } catch(e) {}
+    return "demo_token";
   }
 
-  // ---------- Init ----------
-  window.addEventListener('DOMContentLoaded', async () => {
-    addLog('info','OmniFlow AI Dashboard initialized');
-    addLog('info','Connecting to backend API at ' + API_BASE);
+  // ---------- STEP 6: CONTROL AUTO UPDATE ----------
+  window.addEventListener('DOMContentLoaded', () => {
     checkEndpoints();
     renderCdiChart();
-    await ensureToken();
-    setTimeout(()=>{
-      addLog('info','Running initial telemetry sync...');
-      runAnalysis();
-    }, 800);
-
-    // FIX 4: Real-time intelligence (5s Auto-refresh)
-    setInterval(() => {
-      const navItem = document.querySelector('.nav-item.active');
-      const page = navItem ? navItem.id.replace('nav-', '') : 'dashboard';
-      // Only auto-refresh if on monitoring/analytics pages
-      if(['dashboard', 'simulation', 'heatmap', 'alerts'].includes(page)) {
-        runAnalysis();
-      }
-    }, 5000);
+    runAnalysis(); // Initial load
+    setInterval(runAnalysis, 5000); // SINGLE auto-refresh interval
   });
+  
+  function refreshMetrics() { runAnalysis(); checkEndpoints(); }
 </script>
 </body>
 </html>
