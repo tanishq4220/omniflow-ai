@@ -29,5 +29,16 @@ async def add_process_time_header(request: Request, call_next):
     response.headers["X-Process-Time"] = str(process_time)
     return response
 
+app.include_router(api_router)
 app.include_router(api_router, prefix="/api")
 app.include_router(ws_router)
+
+@app.get("/")
+async def root():
+    return {
+        "message": "OmniFlow AI Backend is live",
+        "endpoints": {
+            "health": "/health or /api/health",
+            "analyze": "/analyze or /api/analyze"
+        }
+    }

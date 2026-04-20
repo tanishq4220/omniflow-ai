@@ -40,6 +40,13 @@ Test suite achieves 75%+ coverage across agents, core engines, and API layers en
 
 https://omniflow-backend-342805636089.us-central1.run.app
 
+Working endpoints:
+
+GET /health
+GET /api/health
+POST /analyze
+POST /api/analyze
+
 Backend deployed on Google Cloud Run for scalable serverless execution.
 
 All API outputs follow deterministic formulas ensuring consistent and testable responses.

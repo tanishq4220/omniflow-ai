@@ -10,17 +10,7 @@ engine = DecisionEngine()
 # Mock DB for demo
 users_db = {"admin": get_password_hash("password123")}
 
-@router.get("/")
-async def root():
-    """Root endpoint to verify API status and available routes."""
-    return {
-        "message": "OmniFlow AI API is running",
-        "status": "active",
-        "available_endpoints": {
-            "health": "/api/health",
-            "analyze": "/api/analyze"
-        }
-    }
+
 
 @router.post("/token", response_model=Token)
 async def login(req: LoginRequest):
