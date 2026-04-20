@@ -3,162 +3,312 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OmniFlow AI | Production Dashboard</title>
+  <title>OmniFlow AI | Autonomous Event Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0f172a;
-      --surface: #1e293b;
-      --surface2: #334155;
+      --bg: #0b0f19;
+      --surface: #151c2c;
+      --surface-light: #1e293b;
       --accent: #3b82f6;
-      --accent-glow: rgba(59,130,246,0.5);
-      --text: #f8fafc;
+      --accent-glow: rgba(59, 130, 246, 0.4);
+      --text: #f1f5f9;
       --muted: #94a3b8;
       --red: #ef4444;
       --yellow: #f59e0b;
       --green: #10b981;
-      --glass: rgba(30, 41, 59, 0.7);
+      --glass: rgba(21, 28, 44, 0.8);
+      --border: rgba(255, 255, 255, 0.08);
     }
+
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit', sans-serif; }
     body { background:var(--bg); color:var(--text); overflow-x:hidden; min-height:100vh; }
-    header { padding: 20px 40px; background: var(--glass); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-    .logo { font-size:24px; font-weight:700; background:linear-gradient(90deg, #60a5fa, #c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; display:flex; align-items:center; gap:10px; }
-    .status-pill { padding:6px 12px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:100px; color:var(--green); font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px; }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--surface-light); border-radius: 10px; }
+
+    header {
+      padding: 16px 40px;
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .logo { font-size:22px; font-weight:700; display:flex; align-items:center; gap:12px; }
+    .logo-icon { width:32px; height:32px; background:linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-size:18px; box-shadow:0 0 20px var(--accent-glow); }
+    .logo-text { background:linear-gradient(90deg, #f8fafc, #94a3b8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+    .status-pill { padding:6px 14px; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:100px; color:var(--green); font-size:12px; font-weight:600; display:flex; align-items:center; gap:8px; }
     .status-dot { width:8px; height:8px; background:var(--green); border-radius:50%; box-shadow:0 0 10px var(--green); animation:pulse 2s infinite; }
-    @keyframes pulse { 0% { opacity:1; } 50% { opacity:0.4; } 100% { opacity:1; } }
-    .layout { display:grid; grid-template-columns:260px 1fr; min-height:calc(100vh - 84px); }
-    sidebar { background:rgba(15,23,42,0.5); border-right:1px solid rgba(255,255,255,0.05); padding:30px 20px; }
-    .nav-item { padding:14px 18px; border-radius:12px; color:var(--muted); cursor:pointer; transition:0.3s; margin-bottom:8px; display:flex; align-items:center; gap:12px; font-weight:500; }
-    .nav-item:hover { background:rgba(255,255,255,0.05); color:var(--text); }
-    .nav-item.active { background:var(--accent); color:white; box-shadow:0 10px 20px rgba(59,130,246,0.3); }
-    main { padding:40px; }
-    .page { display:none; animation:fadeIn 0.4s ease-out; }
+    @keyframes pulse { 0% { opacity:1; } 50% { opacity:0.3; } 100% { opacity:1; } }
+
+    .layout { display:grid; grid-template-columns:280px 1fr; height:calc(100vh - 72px); }
+
+    sidebar { background:rgba(15, 23, 42, 0.8); border-right:1px solid var(--border); padding:30px 20px; display:flex; flex-direction:column; }
+    .nav-group { margin-bottom:30px; }
+    .nav-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:15px; padding-left:15px; font-weight:700; }
+    .nav-item { padding:12px 16px; border-radius:12px; color:var(--muted); cursor:pointer; transition:0.2s; margin-bottom:4px; display:flex; align-items:center; gap:14px; font-weight:500; font-size:14px; }
+    .nav-item:hover { background:rgba(255,255,255,0.03); color:var(--text); }
+    .nav-item.active { background:rgba(59, 130, 246, 0.1); color:var(--accent); border:1px solid rgba(59, 130, 246, 0.2); }
+    .nav-badge { margin-left:auto; background:var(--accent); color:white; padding:2px 8px; border-radius:6px; font-size:10px; font-weight:700; }
+
+    main { padding:40px; overflow-y:auto; }
+    .page { display:none; animation:slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
     .page.active { display:block; }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px; margin-top:30px; }
-    .glass-card { background:var(--surface); border:1px solid rgba(255,255,255,0.05); border-radius:24px; padding:28px; position:relative; overflow:hidden; transition:0.3s; }
-    .card-title { font-size:14px; color:var(--muted); font-weight:600; display:flex; align-items:center; gap:8px; margin-bottom:16px; text-transform:uppercase; }
-    .metric-value { font-size:40px; font-weight:700; margin-bottom:8px; }
-    .control-panel { background:var(--surface); border-radius:24px; padding:30px; display:grid; grid-template-columns:1fr 1fr; gap:30px; border:1px solid rgba(255,255,255,0.05); }
+    @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+    .header-info { margin-bottom:30px; }
+    .header-info h1 { font-size:32px; font-weight:700; color:var(--text); }
+    .header-info p { color:var(--muted); font-size:15px; }
+
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:24px; margin-bottom:24px; }
+    .glass-card { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:24px; transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position:relative; overflow:hidden; }
+    .glass-card:hover { transform:translateY(-5px); border-color:rgba(59, 130, 246, 0.3); box-shadow:0 20px 40px rgba(0,0,0,0.4); }
+    .glass-card::before { content:''; position:absolute; top:0; left:0; width:100%; height:4px; background:transparent; transition:0.3s; }
+    .glass-card:hover::before { background:var(--accent); }
+
+    .card-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; }
+    .card-icon { width:40px; height:40px; background:rgba(255,255,255,0.03); border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--accent); font-size:20px; }
+    .card-trend { font-size:12px; font-weight:700; padding:4px 8px; border-radius:6px; }
+    .trend-up { background:rgba(16,185,129,0.1); color:var(--green); }
+    .trend-down { background:rgba(239,68,68,0.1); color:var(--red); }
+
+    .metric-label { font-size:13px; color:var(--muted); font-weight:600; margin-bottom:4px; }
+    .metric-value { font-size:36px; font-weight:700; color:var(--text); letter-spacing:-1px; }
+    .metric-sub { font-size:12px; color:var(--muted); margin-top:8px; display:flex; align-items:center; gap:6px; }
+
+    /* Simulation Panel */
+    .sim-container { display:grid; grid-template-columns:1fr 380px; gap:24px; }
+    .sim-controls { background:var(--surface); border-radius:24px; padding:32px; border:1px solid var(--border); }
+    .input-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
     .input-group { margin-bottom:20px; }
-    .input-group label { display:block; font-size:13px; color:var(--muted); margin-bottom:8px; }
-    .input-group input { width:100%; padding:14px 18px; background:var(--surface2); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:white; outline:none; }
-    .btn { padding:14px 28px; border-radius:12px; border:none; cursor:pointer; font-weight:600; transition:0.3s; display:inline-flex; align-items:center; gap:10px; }
-    .btn-primary { background:var(--accent); color:white; shadow:0 8px 16px rgba(59,130,246,0.3); }
-    .result-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-top:20px; }
-    .result-item { background:rgba(255,255,255,0.03); padding:16px; border-radius:16px; }
-    .result-label { font-size:11px; color:var(--muted); text-transform:uppercase; }
-    .result-value { font-size:20px; font-weight:700; }
-    .heatmap-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; width:100%; aspect-ratio:1; }
-    .heatmap-cell { border-radius:8px; transition:0.5s; background:var(--surface2); }
-    .log-feed { height:400px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:12px; padding:15px; font-family:monospace; font-size:12px; }
-    #sim-error { display:none; padding:12px; background:rgba(239,68,68,0.1); border:1px solid var(--red); color:var(--red); border-radius:12px; margin-bottom:20px; }
-    .chart-container { height:120px; display:flex; align-items:flex-end; gap:6px; }
-    .chart-bar { flex:1; background:var(--accent); border-radius:4px 4px 0 0; position:relative; }
+    .input-group label { display:block; font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+    .input-group input { width:100%; padding:14px 18px; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:12px; color:white; font-size:15px; font-weight:600; transition:0.3s; outline:none; }
+    .input-group input:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-glow); }
+
+    .btn { padding:14px 28px; border-radius:12px; border:none; cursor:pointer; font-weight:700; font-size:15px; display:inline-flex; align-items:center; gap:12px; transition:0.3s; }
+    .btn-primary { background:linear-gradient(135deg, #3b82f6, #6366f1); color:white; box-shadow:0 8px 16px rgba(59, 130, 246, 0.3); width:100%; justify-content:center; }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 24px rgba(59, 130, 246, 0.5); }
+    .btn-primary:active { transform:translateY(0); }
+
+    .result-panel { background:var(--surface-light); border-radius:24px; padding:24px; border:1px solid rgba(255,255,255,0.05); }
+    .result-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px; }
+    .result-item { padding:16px; background:rgba(0,0,0,0.2); border-radius:16px; border:1px solid rgba(255,255,255,0.03); }
+    .result-item .label { font-size:10px; color:var(--muted); text-transform:uppercase; font-weight:700; margin-bottom:4px; }
+    .result-item .val { font-size:18px; font-weight:700; color:white; }
+
+    .risk-badge { padding:6px 12px; border-radius:100px; font-size:11px; font-weight:800; display:inline-flex; align-items:center; gap:6px; }
+    .badge-low { background:rgba(16,185,129,0.1); color:var(--green); }
+    .badge-high { background:rgba(239,68,68,0.1); color:var(--red); }
+
+    .heatmap-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; width:100%; aspect-ratio:1; margin-top:20px; }
+    .heatmap-cell { border-radius:12px; background:var(--surface-light); transition:0.5s; position:relative; overflow:hidden; }
+    .heatmap-cell::after { content:''; position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg, rgba(255,255,255,0.1), transparent); }
+
+    .alert-box { padding:16px; border-radius:16px; margin-bottom:12px; display:flex; align-items:center; gap:16px; color:white; font-size:14px; font-weight:500; animation:slideIn 0.3s ease-out; }
+    .alert-icon { font-size:20px; }
+
+    #sim-error { display:none; padding:16px; border-radius:16px; background:rgba(239, 68, 68, 0.1); border:1px solid var(--red); color:var(--red); margin-bottom:24px; font-weight:600; font-size:14px; }
+
+    .chart-container { height:160px; display:flex; align-items:flex-end; gap:8px; margin-top:20px; }
+    .chart-bar { flex:1; background:linear-gradient(180deg, var(--accent), var(--accent-glow)); border-radius:4px 4px 0 0; transition:height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+    /* Footer */
+    footer { margin-top:60px; padding:40px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:13px; }
+
+    @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="logo"><span>🌌</span> OmniFlow AI</div>
-  <div class="status-pill"><div class="status-dot"></div>System Live</div>
+  <div class="logo">
+    <div class="logo-icon">♾️</div>
+    <div class="logo-text">OmniFlow AI</div>
+  </div>
+  <div class="status-pill">
+    <div class="status-dot"></div>
+    System Operational · Production V1.2
+  </div>
 </header>
 
 <div class="layout">
   <sidebar>
-    <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')"><span>📊</span> Dashboard</div>
-    <div class="nav-item" id="nav-simulation" onclick="showPage('simulation')"><span>⚙️</span> Simulation</div>
-    <div class="nav-item" id="nav-heatmap" onclick="showPage('heatmap')"><span>🔥</span> Heatmap</div>
-    <div class="nav-item" id="nav-alerts" onclick="showPage('alerts')"><span>🔔</span> Alerts <span id="alertCount">0</span></div>
-    <div class="nav-item" id="nav-logs" onclick="showPage('logs')"><span>📋</span> Logs</div>
+    <div class="nav-group">
+      <div class="nav-label">General</div>
+      <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')"><span>🏠</span> Dashboard</div>
+      <div class="nav-item" id="nav-simulation" onclick="showPage('simulation')"><span>⚡</span> Simulation</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Analytics</div>
+      <div class="nav-item" id="nav-heatmap" onclick="showPage('heatmap')"><span>🔥</span> Heatmap</div>
+      <div class="nav-item" id="nav-alerts" onclick="showPage('alerts')"><span>🔔</span> Alerts <span class="nav-badge" id="alertCount">0</span></div>
+      <div class="nav-item" id="nav-logs" onclick="showPage('logs')"><span>📋</span> System Logs</div>
+    </div>
+    <div style="margin-top:auto">
+      <div class="nav-item" onclick="window.location.reload()"><span>🔄</span> Reset Engine</div>
+    </div>
   </sidebar>
 
   <main>
     <!-- PAGE: Dashboard -->
     <div class="page active" id="page-dashboard">
+      <div class="header-info">
+        <h1>Intelligence Overview</h1>
+        <p>OmniFlow real-time autonomous telemetry & performance monitors</p>
+      </div>
+
       <div class="grid">
         <div class="glass-card">
-          <div class="card-title">Overload Factor</div>
+          <div class="card-head">
+            <div class="card-icon">👥</div>
+            <div class="card-trend trend-up" id="overload-trend">Valid</div>
+          </div>
+          <div class="metric-label">Overload Factor</div>
           <div class="metric-value" id="overload-val">--</div>
+          <div class="metric-sub">Scaling ratio: current/capacity</div>
         </div>
         <div class="glass-card">
-          <div class="card-title">Crowd Density (CDI)</div>
+          <div class="card-head">
+            <div class="card-icon">📈</div>
+            <div id="risk-badge-dash" class="risk-badge badge-low">SAFE</div>
+          </div>
+          <div class="metric-label">Crowd Density Index</div>
           <div class="metric-value" id="cdi-val">--</div>
+          <div class="metric-sub">Normalized venue throughput</div>
         </div>
         <div class="glass-card">
-          <div class="card-title">Queue Wait Time</div>
-          <div class="metric-value" id="wait-val">--</div>
+          <div class="card-head">
+            <div class="card-icon">⏱️</div>
+          </div>
+          <div class="metric-label">Avg. Wait Time</div>
+          <div class="metric-value"><span id="wait-val">--</span><span style="font-size:16px;color:var(--muted);margin-left:6px">min</span></div>
+          <div class="metric-sub">Estimated processing duration</div>
         </div>
         <div class="glass-card">
-          <div class="card-title">Experience Score</div>
+          <div class="card-head">
+            <div class="card-icon">✨</div>
+          </div>
+          <div class="metric-label">Experience Score</div>
           <div class="metric-value" id="exp-val">--</div>
+          <div class="metric-sub">Aggregate attendee satisfaction</div>
         </div>
       </div>
+
       <div class="grid" style="grid-template-columns: 2fr 1fr">
         <div class="glass-card">
-          <div class="card-title">Density Trend</div>
+          <div class="card-title">CDI Progression Trend</div>
           <div class="chart-container" id="cdi-chart"></div>
         </div>
         <div class="glass-card">
-           <div class="card-title">API Status</div>
-           <div id="ep-health" style="font-size:12px;margin-bottom:8px">Checking...</div>
-           <div id="last-update" style="font-size:12px;color:var(--muted)">--</div>
+          <div class="card-title">System Health</div>
+          <div style="font-size:14px;color:var(--muted)">
+            <div style="margin-bottom:15px;display:flex;justify-content:space-between"><span>Core API:</span> <span id="ep-health" style="color:var(--green);font-weight:700">Online</span></div>
+            <div style="margin-bottom:15px;display:flex;justify-content:space-between"><span>Sync Status:</span> <span style="color:white;font-weight:700">Active</span></div>
+            <div style="margin-bottom:15px;display:flex;justify-content:space-between"><span>Last Ping:</span> <span id="last-update" style="color:white">--</span></div>
+            <div style="margin-bottom:0;display:flex;justify-content:space-between"><span>Instance:</span> <span style="color:var(--accent)">US-Central-1</span></div>
+          </div>
+          <button class="btn btn-primary" onclick="runAnalysis()" style="margin-top:25px;padding:12px">⚡ Force Intelligence Sync</button>
         </div>
       </div>
     </div>
 
     <!-- PAGE: Simulation -->
     <div class="page" id="page-simulation">
-      <div id="sim-error"></div>
-      <div class="control-panel">
-        <div class="input-group"><label>People Count</label><input type="number" id="people_count" value="45000"></div>
-        <div class="input-group"><label>Max Capacity</label><input type="number" id="max_capacity" value="30000"></div>
-        <div class="input-group"><label>Queue Length</label><input type="number" id="queue_length" value="1200"></div>
-        <div class="input-group"><label>Service Rate</label><input type="number" id="service_rate" value="150"></div>
-        <div class="input-group"><label>Emotion Score</label><input type="number" id="emotion_score" value="65"></div>
-        <button class="btn btn-primary" id="analyze-btn" onclick="runAnalysis()">⚡ Run Analysis</button>
+      <div class="header-info">
+         <h1>Engine Simulation</h1>
+         <p>Adjust environmental variables to live-test agent response</p>
       </div>
-      <div class="grid" style="margin-top:20px" id="sim-results">
-        <div class="glass-card">
-           <div class="result-grid">
-              <div class="result-item"><div class="result-label">Overload</div><div class="result-value" id="overload-sim">--</div></div>
-              <div class="result-item"><div class="result-label">CDI</div><div class="result-value" id="cdi-sim">--</div></div>
-              <div class="result-item"><div class="result-label">Wait Time</div><div class="result-value" id="wait-sim">--</div></div>
-              <div class="result-item"><div class="result-label">Risk</div><div class="result-value" id="risk-sim">--</div></div>
-           </div>
+      <div id="sim-error"></div>
+      <div class="sim-container">
+        <div class="sim-controls">
+          <div class="input-row">
+            <div class="input-group"><label>People Count</label><input type="number" id="people_count" value="12000"></div>
+            <div class="input-group"><label>Venue Capacity</label><input type="number" id="max_capacity" value="10000"></div>
+          </div>
+          <div class="input-row">
+             <div class="input-group"><label>Queue Size</label><input type="number" id="queue_length" value="800"></div>
+             <div class="input-group"><label>Service (p/min)</label><input type="number" id="service_rate" value="100"></div>
+          </div>
+          <div class="input-group"><label>Emotional Sentiment (0-100)</label><input type="number" id="emotion_score" value="75"></div>
+          <button class="btn btn-primary" id="analyze-btn" onclick="runAnalysis()">🚀 Deploy Analysis Logic</button>
+        </div>
+
+        <div class="result-panel">
+          <div class="card-title">Simulation Output</div>
+          <div class="result-grid">
+            <div class="result-item"><div class="label">Overload</div><div class="val" id="overload-sim">--</div></div>
+            <div class="result-item"><div class="label">CDI</div><div class="val" id="cdi-sim">--</div></div>
+            <div class="result-item"><div class="label">Wait</div><div class="val" id="wait-sim">--</div></div>
+            <div class="result-item"><div class="label">Risk</div><div class="val" id="risk-sim">--</div></div>
+          </div>
+          <div style="margin-top:24px; padding:20px; background:rgba(0,0,0,0.3); border-radius:16px; border:1px solid rgba(255,255,255,0.05)">
+            <div style="font-size:11px; text-transform:uppercase; color:var(--accent); font-weight:700; margin-bottom:8px">AI Recommendation</div>
+            <div id="ai-rec" style="font-size:13px; line-height:1.6; color:var(--text)">Analysis pending...</div>
+            <div id="pred-box" style="margin-top:15px; font-size:12px; font-weight:700; color:var(--yellow)"></div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- PAGE: Heatmap -->
     <div class="page" id="page-heatmap">
-      <div class="glass-card">
-        <div class="card-title">Venue Heatmap</div>
+      <div class="header-info">
+        <h1>Venue Heatmap</h1>
+        <p>Dynamic sector density visualization provided by Crowd Agents</p>
+      </div>
+      <div class="glass-card" style="max-width:600px">
         <div id="heatmapGrid" class="heatmap-grid"></div>
+        <div style="margin-top:30px; display:flex; justify-content:center; gap:20px">
+           <div style="display:flex;align-items:center;gap:8px;font-size:12px"><div style="width:12px;height:12px;border-radius:3px;background:var(--green)"></div> Safe</div>
+           <div style="display:flex;align-items:center;gap:8px;font-size:12px"><div style="width:12px;height:12px;border-radius:3px;background:var(--yellow)"></div> Warning</div>
+           <div style="display:flex;align-items:center;gap:8px;font-size:12px"><div style="width:12px;height:12px;border-radius:3px;background:var(--red)"></div> Critical</div>
+        </div>
       </div>
     </div>
 
     <!-- PAGE: Alerts -->
     <div class="page" id="page-alerts">
-      <div class="glass-card">
-        <div class="card-title">System Alerts</div>
-        <div id="alertsContainer"></div>
+      <div class="header-info">
+        <h1>Live Alerts</h1>
+        <p>Real-time incident detection and safety protocols</p>
       </div>
+      <div id="alertsContainer" style="max-width:700px"></div>
     </div>
 
     <!-- PAGE: Logs -->
     <div class="page" id="page-logs">
+      <div class="header-info">
+        <h1>System Logs</h1>
+        <p>Raw multi-agent communication & orchestration feed</p>
+      </div>
       <div class="glass-card">
         <div class="log-feed" id="log-feed"></div>
       </div>
     </div>
+
+    <footer>
+      <div>&copy; 2026 OmniFlow AI Systems · Autonomous Intelligence Framework</div>
+      <div style="display:flex;gap:20px">
+         <span style="color:var(--accent)">System Heartbeat: 100%</span>
+         <span>Version: 1.2.4r</span>
+      </div>
+    </footer>
   </main>
 </div>
 
 <script>
-  // STEP 4: SAFE FUNCTIONS
+  // ---------- STEP 1: STABLE HELPERS ----------
   function safeSet(id, value) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -171,76 +321,123 @@
     el.innerHTML = value;
   }
 
-  // STEP 1 & 2: UPDATE UI
+  function setStyle(id, prop, val) {
+    const el = document.getElementById(id);
+    if (el) el.style[prop] = val;
+  }
+
+  function setClass(id, cls) {
+    const el = document.getElementById(id);
+    if (el) el.className = cls;
+  }
+
+  // ---------- STEP 2: UI ORCHESTRATION ----------
   function updateUI(data) {
     if (!data) return;
 
-    // Dashboard
+    // Dashboard Layer
     safeSet("overload-val", data.overload_factor.toFixed(2) + "x");
     safeSet("cdi-val", data.cdi.toFixed(1));
-    safeSet("wait-val", data.wait_time.toFixed(1) + " min");
-    safeSet("exp-val", data.score.toFixed(1));
+    safeSet("wait-val", data.wait_time.toFixed(1));
+    safeSet("exp-val", data.score.toFixed(0));
 
-    // Simulation
+    // Simulation Layer
     safeSet("overload-sim", data.overload_factor.toFixed(2) + "x");
     safeSet("cdi-sim", data.cdi.toFixed(1));
     safeSet("wait-sim", data.wait_time.toFixed(1) + "m");
     safeSet("risk-sim", data.risk_level);
 
-    safeSet("last-update", "Last update: " + new Date().toLocaleTimeString());
+    // Dynamic Indicators
+    const riskBadgeDash = document.getElementById('risk-badge-dash');
+    if(riskBadgeDash) {
+       riskBadgeDash.textContent = data.risk_level;
+       riskBadgeDash.className = 'risk-badge ' + (data.risk_level === 'LOW' ? 'badge-low' : 'badge-high');
+    }
+
+    const recs = {
+      CRITICAL: "🚨 CRITICAL: Deploy emergency teams, halt entries, and initiate immediate dispersion protocols.",
+      HIGH: "⚠️ HIGH: Open secondary overflow sectors and increase service capacity by 40%.",
+      MEDIUM: "🟡 MEDIUM: Active monitoring of sector ingress. Monitor gate throughput.",
+      LOW: "✅ LOW: All parameters stable. Maintaining normal operational cadence."
+    };
+    safeSet("ai-rec", recs[data.risk_level] || recs.LOW);
+    safeSet("last-update", new Date().toLocaleTimeString());
 
     renderAlerts(data);
     renderHeatmap(data);
+    renderPrediction(data);
     updateTrend(data.cdi);
   }
 
-  // STEP 5: FIX ALERTS
   function renderAlerts(data) {
     const container = document.getElementById("alertsContainer");
     const badge = document.getElementById("alertCount");
     if (!container) return;
     container.innerHTML = "";
+    
     const alerts = data.alerts || [];
     if (alerts.length === 0) {
-      container.innerHTML = "<div>✅ No alerts</div>";
+      container.innerHTML = `<div style="color:var(--muted); padding:30px; border:1px dashed var(--border); border-radius:16px; text-align:center">✅ System Stable. No active threats.</div>`;
       if (badge) badge.textContent = "0";
       return;
     }
+
     alerts.forEach(a => {
       const div = document.createElement("div");
-      let bg = "#1e293b";
+      div.className = "alert-box";
+      let bg = "var(--surface-light)";
       if (a.includes("CRITICAL")) bg = "#7f1d1d";
       else if (a.includes("HIGH")) bg = "#78350f";
+      
       div.style.background = bg;
-      div.style.padding = "10px";
-      div.style.borderRadius = "8px";
-      div.style.margin = "6px 0";
-      div.style.color = "white";
-      div.textContent = a;
+      div.innerHTML = `<span class="alert-icon">${a.includes('CRITICAL')?'🚨':'⚠️'}</span> <div>${a}</div>`;
       container.appendChild(div);
     });
     if (badge) badge.textContent = alerts.length;
   }
 
-  // STEP 6: FIX HEATMAP
   function renderHeatmap(data) {
     const grid = document.getElementById("heatmapGrid");
     if (!grid) return;
     grid.innerHTML = "";
     (data.heatmap || []).forEach(v => {
       const cell = document.createElement("div");
-      let color = "#22c55e";
-      if (v > 1.5) color = "#ef4444";
-      else if (v > 1) color = "#f59e0b";
-      cell.style.background = color;
       cell.className = "heatmap-cell";
+      let color = "var(--green)";
+      if (v > 1.5) color = "var(--red)";
+      else if (v > 1) color = "var(--yellow)";
+      cell.style.background = color;
       grid.appendChild(cell);
     });
   }
 
-  // API FLOW
+  function renderPrediction(data) {
+    const box = document.getElementById("pred-box");
+    if (!box) return;
+    if (!data.predicted_alert) {
+       box.innerHTML = "✓ Future prediction status: STABLE";
+       box.style.color = "var(--green)";
+       return;
+    }
+    box.innerHTML = "🔮 PREDICTION: " + data.predicted_alert;
+    box.style.color = data.predicted_alert.includes("CRITICAL") ? "var(--red)" : "var(--yellow)";
+  }
+
+  // ---------- TRENDING LOGIC ----------
+  const trendCache = [];
+  function updateTrend(val) {
+    trendCache.push(val);
+    if(trendCache.length > 20) trendCache.shift();
+    const c = document.getElementById('cdi-chart');
+    if(!c) return;
+    c.innerHTML = trendCache.map(v => `<div class="chart-bar" style="height:${v}%"></div>`).join('');
+  }
+
+  // ---------- API FLOW ----------
   async function runAnalysis() {
-    const errEl = document.getElementById('sim-error');
+    const btn = document.getElementById('analyze-btn');
+    if(btn) { btn.disabled = true; btn.innerHTML = '⚙️ Processing...'; }
+
     const payload = {
       people_count: parseInt(document.getElementById('people_count').value),
       max_capacity: parseInt(document.getElementById('max_capacity').value),
@@ -250,59 +447,55 @@
     };
 
     try {
-      const tokenResponse = await fetch("/api/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: "admin", password: "password123" })
+      const auth = await fetch("/api/token", {
+        method: "POST", 
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({username:"admin", password:"password123"})
       });
-      const { access_token } = await tokenResponse.json();
+      const { access_token } = await auth.json();
 
       const res = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + access_token },
+        headers: { "Content-Type":"application/json", "Authorization": "Bearer " + access_token },
         body: JSON.stringify(payload)
       });
       const j = await res.json();
       
-      const flat = {
+      updateUI({
         cdi: j.analysis.cdi,
         wait_time: j.analysis.wait_time,
         score: j.experience_score,
         risk_level: j.analysis.safety_risk,
         overload_factor: j.analysis.overload_factor,
         alerts: j.analysis.alerts,
-        heatmap: j.analysis.heatmap
-      };
-      updateUI(flat);
-      if(errEl) errEl.style.display = 'none';
+        heatmap: j.analysis.heatmap,
+        predicted_alert: j.analysis.predicted_alert,
+        emotion_score: payload.emotion_score
+      });
+      
+      setStyle('sim-error', 'display', 'none');
     } catch (err) {
-      console.error(err);
-      safeHTML("sim-error", "⚠️ Reconnecting to intelligence system...");
-      const el = document.getElementById("sim-error");
-      if(el) el.style.display = "block";
+      safeHTML("sim-error", "⚠️ Synchronizing with Intelligence Network... Retrying.");
+      setStyle("sim-error", "display", "block");
     }
+    if(btn) { btn.disabled = false; btn.innerHTML = '🚀 Deploy Analysis Logic'; }
   }
 
-  // Trends
-  const trendData = [];
-  function updateTrend(val) {
-    trendData.push(val);
-    if(trendData.length > 10) trendData.shift();
-    const container = document.getElementById("cdi-chart");
-    if(!container) return;
-    container.innerHTML = trendData.map(v => `<div class="chart-bar" style="height:${v}%"></div>`).join('');
-  }
-
-  // Navigation & Init
+  // ---------- NAVIGATION ----------
   function showPage(name) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-' + name).classList.add('active');
-    document.getElementById('nav-' + name).classList.add('active');
+    const page = document.getElementById('page-' + name);
+    const nav = document.getElementById('nav-' + name);
+    if(page) page.classList.add('active');
+    if(nav) nav.classList.add('active');
   }
 
-  setInterval(runAnalysis, 5000);
-  window.onload = runAnalysis;
+  // ---------- INIT ----------
+  window.onload = () => {
+    runAnalysis();
+    setInterval(runAnalysis, 5000);
+  };
 </script>
 </body>
 </html>
