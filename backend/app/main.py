@@ -36,8 +36,10 @@ app.include_router(api_router, prefix="/api")
 app.include_router(api_router)          # fallback: /health, /analyze
 app.include_router(ws_router)
 
-# Static dashboard UI
-_static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+# Static dashboard UI — resolves ./static/ relative to /code (Docker) or app parent (local)
+_app_dir = os.path.dirname(__file__)                   # .../app
+_static_dir = os.path.join(_app_dir, "..", "static")   # .../static
+_static_dir = os.path.abspath(_static_dir)
 if os.path.isdir(_static_dir):
     app.mount("/static", StaticFiles(directory=_static_dir), name="static")
 
