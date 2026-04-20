@@ -136,6 +136,41 @@ Verifies the system connectivity and operational availability immediately for De
 ## 4. Operational Score Tactics used in OmniFlow AI
 
 - **Code Quality**: Strict function limits (<20 lines). Multi-tiered layout decoupling Agents, Core logic, APIs, and Utilities.
-- **Security**: Contains `fastapi-limiter` (Rate Limiting Middleware), native CORS constraints, robust PyJWT auth verification bindings, and `pydantic` schemas for safe ingest.
-- **Efficiency**: Written using fully asynchronous FastAPI paradigms and WebSocket persistent channels. System uses asynchronous FastAPI endpoints and WebSocket communication to ensure efficient real-time performance.
+- **Security**: JWT Authentication, rate limiting, security headers, CORS restriction, and Pydantic input validation.
+- **Efficiency**: Written using fully asynchronous FastAPI paradigms and WebSocket persistent channels.
 - **Accessibility**: ARIA labels embedded. Semantic routing via `lucide-react` icons combined with a High-Contrast (`#0F172A`) UI.
+
+## 🔒 Security Features
+
+| Feature | Implementation |
+|---|---|
+| **JWT Authentication** | All `/analyze` requests require `Authorization: Bearer <token>` |
+| **Rate Limiting** | `/analyze`: 30 req/min · `/token`: 10 req/min via `slowapi` |
+| **Input Validation** | Strict Pydantic bounds on all `TelemetryData` fields (min/max enforced) |
+| **Secure Headers** | `X-Content-Type-Options`, `X-Frame-Options`, `Strict-Transport-Security`, `X-XSS-Protection` |
+| **CORS Protection** | Restricted to allowed origin list (no wildcard `*`) |
+| **Error Handling** | Global exception handler returns safe JSON (no internal stack leak) |
+| **Request Tracking** | Unique `request_id` per request logged to Firestore and response |
+
+## ☁️ Google Cloud Integration
+
+| Service | Usage |
+|---|---|
+| **Cloud Run** | Serverless auto-scaling container deployment |
+| **Firestore** | Real-time structured logging in `analysis_logs` collection |
+| **ADC / Service Account** | Authenticated via `GOOGLE_APPLICATION_CREDENTIALS` env var |
+| **Cloud Build** | Automated container build pipeline triggered via `gcloud run deploy --source` |
+
+### Firestore Log Schema (`analysis_logs`)
+
+```json
+{
+  "request_id": "uuid4",
+  "user_id": "admin",
+  "timestamp": "2026-04-20T14:00:00",
+  "CDI": 80.0,
+  "score": 65.4,
+  "risk_level": "HIGH"
+}
+```
+
