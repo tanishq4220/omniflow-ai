@@ -337,8 +337,9 @@
 
     /* Heatmap */
     .heatmap-grid {
-      display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
       margin: 12px 0;
+      max-width: 400px;
     }
     .heatmap-cell {
       aspect-ratio: 1;
@@ -453,7 +454,7 @@
         </button>
         <button class="nav-item" onclick="showPage('alerts')" id="nav-alerts">
           <span class="nav-icon">🚨</span> Alerts
-          <span class="nav-badge" id="alert-badge">3</span>
+          <span class="nav-badge" id="alertCount">0</span>
         </button>
         <button class="nav-item" onclick="showPage('logs')" id="nav-logs">
           <span class="nav-icon">📋</span> System Logs
@@ -766,7 +767,7 @@
               <span style="color:var(--muted)">Low → High Density</span>
             </div>
           </div>
-          <div class="heatmap-grid" id="heatmap" aria-label="Crowd density heatmap"></div>
+          <div class="heatmap-grid" id="heatmapGrid" aria-label="Crowd density heatmap"></div>
           <div style="margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
             <div class="result-item" style="text-align:center">
               <div class="result-label">Hotspot Zones</div>
@@ -833,7 +834,7 @@
       <div class="page" id="page-alerts">
         <div class="glass-card">
           <div class="card-title"><span class="card-title-icon">🚨</span> Live Alerts & Notifications</div>
-          <div id="alerts-list"></div>
+          <div id="alertsContainer"></div>
         </div>
       </div>
 
@@ -865,8 +866,6 @@
     const subs = {dashboard:'Live event telemetry · Last updated '+document.getElementById('last-update').textContent,simulation:'Configure & run analysis against the live API',heatmap:'Real-time crowd density visualization',agents:'Multi-agent coordination status',alerts:'Active system alerts',logs:'Structured system log feed'};
     document.getElementById('page-title').textContent = titles[name] || name;
     document.getElementById('page-sub').textContent = subs[name] || '';
-    if (name === 'heatmap') generateHeatmap();
-    if (name === 'alerts') loadAlerts();
   }
 
   function setText(id, value) {
@@ -1073,6 +1072,61 @@
     document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
 
     addLog('info', `Dashboard updated successfully`);
+
+    // Intelligent Components
+    renderHeatmap(data.analysis);
+    renderAlerts(data.analysis);
+  }
+
+  function renderHeatmap(analysis) {
+    const container = document.getElementById("heatmapGrid");
+    if(!container || !analysis.heatmap) return;
+    container.innerHTML = "";
+
+    analysis.heatmap.forEach(value => {
+      const cell = document.createElement("div");
+      let color = "var(--green)";
+      if (value > 1.5) color = "var(--red)";
+      else if (value > 1) color = "var(--yellow)";
+      
+      cell.style.background = color;
+      cell.className = "heatmap-cell";
+      cell.title = `Zone Density: ${value.toFixed(2)}`;
+      container.appendChild(cell);
+    });
+
+    // Update stats
+    const hot = analysis.heatmap.filter(v => v > 1.5).length;
+    const clear = analysis.heatmap.filter(v => v < 1).length;
+    const avg = analysis.heatmap.reduce((a,b)=>a+b,0) / analysis.heatmap.length;
+    
+    setText("hotspot-count", hot);
+    setText("clear-count", clear);
+    setText("avg-density", avg.toFixed(2) + 'x');
+  }
+
+  function renderAlerts(analysis) {
+    const container = document.getElementById("alertsContainer");
+    if(!container || !analysis.alerts) return;
+    container.innerHTML = "";
+
+    analysis.alerts.forEach(alert => {
+      const div = document.createElement("div");
+      div.textContent = alert;
+      div.className = "alert-item";
+      // Determine icon based on message
+      let icon = alert.includes("CRITICAL") ? "🚨" : alert.includes("HIGH") ? "⚠️" : "⏳";
+      div.innerHTML = `
+        <div class="alert-icon">${icon}</div>
+        <div>
+          <div class="alert-title">${alert}</div>
+          <div class="alert-time">Detected just now</div>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    setText("alertCount", analysis.alerts.length);
   }
 
   // ---------- Refresh ----------
@@ -1082,49 +1136,11 @@
     document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
   }
 
-  // ---------- Heatmap ----------
-  function generateHeatmap() {
-    const grid = document.getElementById('heatmap');
-    const cells = [];
-    let hot=0, clear=0, total=0;
-    for(let i=0;i<80;i++){
-      const v = Math.random();
-      const h = Math.floor(v*100);
-      total += h;
-      if(h>75) hot++;
-      if(h<25) clear++;
-      const r = Math.floor(v*255);
-      const g = Math.floor((1-v)*180);
-      const b = 50;
-      cells.push(`<div class="heatmap-cell" style="background:rgb(${r},${g},${b})" title="Density: ${h}%" role="cell" aria-label="Zone density ${h}%"></div>`);
-    }
-    grid.innerHTML = cells.join('');
-    document.getElementById('hotspot-count').textContent = hot;
-    document.getElementById('clear-count').textContent = clear;
-    document.getElementById('avg-density').textContent = (total/80).toFixed(1)+'%';
-    addLog('info',`Heatmap refreshed – ${hot} hotspots detected`);
+    addLog('info',`Heatmap refreshed from latest telemetry`);
   }
 
-  // ---------- Alerts ----------
   function loadAlerts() {
-    const list = document.getElementById('alerts-list');
-    const alerts = [
-      {icon:'🔴',title:'High Density Alert – Zone C4',desc:'Crowd density exceeded 80% in Zone C4. Requesting staff redeployment.',time:'2 minutes ago',type:'high'},
-      {icon:'🟡',title:'Queue Wait Time Threshold – Gate B',desc:'Average wait time at Gate B reached 12 minutes. Consider opening additional lanes.',time:'8 minutes ago',type:'medium'},
-      {icon:'🟡',title:'Service Rate Drop – Food Court',desc:'Service rate dropped to 3 persons/min. Bottleneck risk in food court area.',time:'15 minutes ago',type:'medium'},
-      {icon:'🟢',title:'Zone A Cleared',desc:'Crowd density in Zone A returned to safe levels (42%). No action required.',time:'22 minutes ago',type:'low'},
-      {icon:'🔵',title:'System Health Check Passed',desc:'All agents operational. API endpoints responsive. Firestore sync active.',time:'30 minutes ago',type:'info'}
-    ];
-    list.innerHTML = alerts.map(a=>`
-      <div class="alert-item">
-        <div class="alert-icon">${a.icon}</div>
-        <div>
-          <div class="alert-title">${a.title}</div>
-          <div class="alert-desc">${a.desc}</div>
-          <div class="alert-time">${a.time}</div>
-        </div>
-      </div>`).join('');
-    addLog('warn','3 active alerts require attention');
+    addLog('info','Alerts refreshed from latest telemetry');
   }
 
   async function ensureToken() {

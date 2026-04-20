@@ -31,11 +31,32 @@ class DecisionEngine:
         pred  = self.prediction.predict_congestion_time(cdi, wait_time)
         score = self.scoring.calculate_experience_score(wait_time, cdi, emo)
 
+        # Generate data-driven heatmap (4x4 grid)
+        heatmap = [
+            round(min(overload_factor * (0.5 + i/20), 5.0), 2)
+            for i in range(16)
+        ]
+
+        # Generate smart alerts
+        alerts = []
+        if overload_factor > 1.5:
+            alerts.append("🚨 CRITICAL: Extreme crowd overload detected")
+        elif overload_factor > 1.0:
+            alerts.append("⚠️ HIGH: Capacity exceeded")
+        
+        if wait_time > 10:
+            alerts.append("⏳ Long queue detected")
+        
+        if emo < 40:
+            alerts.append("😟 Low attendee satisfaction")
+
         resp = AgentResponse(
             cdi=cdi,
             overload_factor=overload_factor,
             wait_time=wait_time,
             safety_risk=risk,
             predicted_congestion=pred,
+            heatmap=heatmap,
+            alerts=alerts
         )
         return SystemState(telemetry=t, analysis=resp, experience_score=score)
