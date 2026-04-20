@@ -712,27 +712,27 @@
               <div class="result-grid">
                 <div class="result-item">
                   <div class="result-label">Overload Factor</div>
-                  <div class="result-value" id="res-overload" style="color:#8b5cf6">--</div>
+                  <div class="result-value" id="overloadFactor" style="color:#8b5cf6">--</div>
                   <div style="font-size:11px;color:var(--muted)">Ratio (people/capacity)</div>
                 </div>
                 <div class="result-item">
                   <div class="result-label">Crowd Density Index</div>
-                  <div class="result-value" id="res-cdi" style="color:#3b82f6">--</div>
+                  <div class="result-value" id="cdi" style="color:#3b82f6">--</div>
                   <div style="font-size:11px;color:var(--muted)">Normalized 0-100</div>
                 </div>
                 <div class="result-item">
                   <div class="result-label">Queue Wait Time</div>
-                  <div class="result-value" id="res-wait" style="color:#f59e0b">--</div>
+                  <div class="result-value" id="waitTime" style="color:#f59e0b">--</div>
                   <div style="font-size:11px;color:var(--muted)">wait = queue / service_rate</div>
                 </div>
                 <div class="result-item">
                   <div class="result-label">Experience Score</div>
-                  <div class="result-value" id="res-exp" style="color:#10b981">--</div>
+                  <div class="result-value" id="score" style="color:#10b981">--</div>
                   <div style="font-size:11px;color:var(--muted)">0.4×(100-wait)+0.3×(100-CDI)+0.3×emo</div>
                 </div>
                 <div class="result-item">
                   <div class="result-label">Safety Risk</div>
-                  <div class="result-value" id="res-risk" style="font-size:18px">--</div>
+                  <div class="result-value" id="safety" style="font-size:18px">--</div>
                   <div id="risk-badge-res" style="margin-top:6px"></div>
                 </div>
               </div>
@@ -869,6 +869,15 @@
     if (name === 'alerts') loadAlerts();
   }
 
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = value;
+    } else {
+      console.warn("Missing element:", id);
+    }
+  }
+
   // ---------- Log system ----------
   const logs = [];
   function addLog(level, msg) {
@@ -977,20 +986,9 @@
       addLog('info', `Analysis complete – Overload:${data.analysis?.overload_factor?.toFixed(2)}x Risk:${data.analysis?.safety_risk} Score:${data.experience_score?.toFixed(1)}`);
       displayResults(data);
     } catch (e) {
-      // Fallback: compute locally
-      addLog('warn', 'API call failed – using local deterministic engine: ' + e.message);
-      errEl.textContent = 'API Error: ' + e.message + ' (using local fallback)';
+      addLog('error', 'API failed: ' + e.message);
+      errEl.textContent = 'API Error: ' + e.message;
       errEl.style.display = 'block';
-      const overload = payload.people_count / payload.max_capacity;
-      const cdi = Math.min((payload.people_count / payload.max_capacity) * 100, 100);
-      const wait = payload.queue_length / payload.service_rate;
-      const score = Math.max(0, Math.min(100, 0.4*(100-wait) + 0.3*(100-cdi) + 0.3*payload.emotion_score));
-      const risk = overload<0.8?'LOW':overload<=1.0?'MEDIUM':overload<=1.5?'HIGH':'CRITICAL';
-      displayResults({
-        telemetry: payload,
-        analysis: { cdi, overload_factor: overload, wait_time: wait, safety_risk: risk, predicted_congestion: Math.round(wait+2) },
-        experience_score: score
-      });
     }
 
     btn.innerHTML = '⚡ Analyze Telemetry';
@@ -1009,13 +1007,18 @@
     document.getElementById('result-placeholder').style.display = 'none';
     document.getElementById('result-content').style.display = 'block';
     
-    document.getElementById('res-overload').textContent = overload.toFixed(2) + 'x';
-    document.getElementById('res-overload').style.color = overload>1.5?'var(--red)':overload>1?'var(--yellow)':'var(--green)';
+    let color = "var(--green)";
+    if (overload > 1.5) color = "var(--red)";
+    else if (overload > 1) color = "var(--yellow)";
 
-    document.getElementById('res-cdi').textContent = cdi.toFixed(1);
-    document.getElementById('res-wait').textContent = wait.toFixed(1) + ' min';
-    document.getElementById('res-exp').textContent = score.toFixed(1);
-    document.getElementById('res-risk').textContent = risk;
+    setText("overloadFactor", overload.toFixed(2) + "x");
+    const ovEl = document.getElementById("overloadFactor");
+    if(ovEl) ovEl.style.color = color;
+
+    setText("cdi", cdi.toFixed(1));
+    setText("waitTime", wait.toFixed(1) + " min");
+    setText("score", score.toFixed(1));
+    setText("safety", risk);
 
     const riskClass = {LOW:'risk-low',MEDIUM:'risk-medium',HIGH:'risk-high',CRITICAL:'risk-critical'}[risk]||'risk-low';
     document.getElementById('risk-badge-res').innerHTML = `<span class="risk-badge ${riskClass}">● ${risk}</span>`;
